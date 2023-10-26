@@ -1,6 +1,7 @@
 # Movie Sentiment Analysis
 
 The project aims to achieve several objectives by utilizing multiple sub-models:
+
   1. The first model is designed to predict the genre of a movie based on its title.
   2. The second model combines user reviews and the release year to determine the sentiment of the audience. For example, horror movies experienced a shift in sentiment over the years, with predominantly negative reception in 1990 and largely positive feedback in 2022.
   3. The results from the first model (title-based genre prediction) and the second model (review-based sentiment analysis) are then integrated for comprehensive analysis. This allows for an understanding of how sentiment towards a movie varies across different genres. For example, the word "frightening" denotes positive tone for horror but not in comedy.
