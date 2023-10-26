@@ -1,6 +1,6 @@
 # Movie Sentiment Analysis
 
-Members
+## Members
 - Auradee Castro
 - Bhumika Rajendra Babu
 - Olivia Deguit
