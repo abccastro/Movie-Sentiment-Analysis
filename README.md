@@ -2,3 +2,4 @@
 
 Members
 - Bhumika Rajendra Babu
+- Olivia Deguit
