@@ -14,5 +14,3 @@ The project aims to achieve several objectives by building and utilizing multipl
 - Bhumika Rajendra Babu
 - Olivia Deguit
 - Varun Sharma
-- Random Person
-- Random Person #2
