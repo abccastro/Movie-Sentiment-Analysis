@@ -11,8 +11,6 @@ The project aims to achieve several objectives by building and utilizing multipl
 
 ## Members
 - Auradee Castro
-<<<<<<< HEAD
 - Varun Sharma
-=======
 - Miraj Sinya
->>>>>>> 1ef62f3c1ebdd6c81154978eec3b336ae23472d8
+
