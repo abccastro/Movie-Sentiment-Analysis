@@ -11,3 +11,4 @@ The project aims to achieve several objectives by building and utilizing multipl
 
 ## Members
 - Auradee Castro
+- Miraj Sinya
