@@ -1,3 +1,21 @@
+"""
+Text Preprocessing Methods
+
+This Python file contains a collection of text preprocessing methods to clean and prepare text data for natural language processing (NLP) tasks. 
+These methods include functions for tasks such as removal of non-grammatical text, lowercasing, tokenization, stopword removal, and etc.
+
+Usage:
+- Import this file in your Python script.
+- Call the desired preprocessing functions with your text data to apply the respective transformation.
+
+Example Usage:
+>>> import text_preprocessing as tp
+>>> text = "Hello, World! This is an email example@test.com."
+>>> clean_text = tp.remove_email_address(text)
+>>> print(clean_text)
+Output: "Hello World! This is an email "
+
+"""
 import re
 import urllib3
 
