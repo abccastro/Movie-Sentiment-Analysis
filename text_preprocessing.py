@@ -26,7 +26,6 @@ import urllib3
 
 from emot.emo_unicode import EMOTICONS_EMO
 from flashtext import KeywordProcessor
-from flashtext import KeywordProcessor
 from bs4 import BeautifulSoup
 
 
@@ -38,6 +37,12 @@ def remove_email_address(text):
 def remove_hyperlink(text):
     pattern_url = r'https?://(?:www\.)?[\w\.-]+(?:\.[a-z]{2,})+(?:/[-\w\.,/]*)*(?:\?[\w\%&=]*)?'
     return re.sub(pattern_url, '', text)
+
+
+def replace_nonascii_characters(text):
+    # List of all non-ascii characters that needs to be replaced
+    text = re.sub('[İı]', 'I', text)
+    return text
 
 
 def get_emojis():
@@ -59,16 +64,20 @@ def webscrape_slang_words():
     http = urllib3.PoolManager()
     slang_word_dict = KeywordProcessor()
 
-    # NOTE: need to save the content in a file
-    for i in range(97,123):
-        page = http.request('GET', 'https://www.noslang.com/dictionary/'+chr(i))
-        soup = BeautifulSoup(page.data, 'html.parser')
+    try:
+        # TODO: need to save the content in a file
+        for i in range(97,123):
+            page = http.request('GET', 'https://www.noslang.com/dictionary/'+chr(i))
+            soup = BeautifulSoup(page.data, 'html.parser')
 
-        for elem in soup.findAll('div', class_="dictonary-word"): 
-            slang_word = elem.find('abbr').get_text()
+            for elem in soup.findAll('div', class_="dictonary-word"): 
+                slang_word = elem.find('abbr').get_text()
 
-            key = slang_word[0 : slang_word.rfind(":")-1]
-            value = elem.find('dd', class_="dictonary-replacement").get_text()
-            slang_word_dict.add_keyword(key.lower(), value.lower())
+                key = slang_word[0 : slang_word.rfind(":")-1]
+                value = elem.find('dd', class_="dictonary-replacement").get_text()
+                slang_word_dict.add_keyword(key.lower(), value.lower())
+    except Exception as err:
+        print(f"ERROR: {err}")
+        print(f"Input Text: {text}")
     
     return slang_word_dict
