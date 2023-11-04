@@ -81,3 +81,7 @@ def webscrape_slang_words():
         print(f"Input Text: {text}")
     
     return slang_word_dict
+
+
+def lemmatize_word(text):
+    print('Hello World',text)
