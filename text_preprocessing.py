@@ -78,6 +78,5 @@ def webscrape_slang_words():
                 slang_word_dict.add_keyword(key.lower(), value.lower())
     except Exception as err:
         print(f"ERROR: {err}")
-        print(f"Input Text: {text}")
     
     return slang_word_dict
