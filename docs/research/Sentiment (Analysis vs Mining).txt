@@ -1,0 +1,13 @@
+Sentiment analysis and sentiment mining are related but slightly different concepts in the field of natural language processing and data analysis. 
+
+1. Sentiment Analysis:
+   - Sentiment analysis, also known as opinion mining, is the process of determining the sentiment or emotional tone in a piece of text, such as a review, social media post, or customer feedback.
+   - It typically involves classifying the sentiment as positive, negative, or neutral, and sometimes more fine-grained sentiments such as very positive, very negative, or mixed sentiments.
+   - Sentiment analysis is often used for understanding public opinion, brand perception, product reviews, and customer feedback, among other applications.
+
+2. Sentiment Mining:
+   - Sentiment mining is a broader concept that encompasses sentiment analysis as one of its components. It involves extracting and analyzing sentiments, opinions, and emotions from various data sources, not just text data.
+   - Sentiment mining can include sentiment analysis of text, but it can also involve analyzing sentiment in other forms of data, such as audio, video, images, and even sensor data.
+   - This approach is more holistic and aims to gather insights from a wider range of data sources, providing a more comprehensive view of sentiment and emotions related to a specific topic or entity.
+
+In summary, sentiment analysis is a specific technique for analyzing sentiment in text data, while sentiment mining is a broader concept that involves analyzing sentiment and emotions across various types of data, potentially including text, audio, video, and more. Sentiment mining is often used for more comprehensive and multi-modal sentiment analysis, whereas sentiment analysis specifically focuses on text-based sentiment classification.
