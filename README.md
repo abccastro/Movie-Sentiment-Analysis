@@ -10,8 +10,11 @@ The project aims to achieve several objectives by building and utilizing multipl
 
 ## Members
 
+- Abhishek Natani
 - Auradee Castro
-- Varun Sharma
-- Miraj Sinya
 - Bhumika Rajendra Babu
+- Miraj Sinya
+- Olivia Deguit
+- Rochan Mehta
 - Roger Mais
+- Varun Sharma
