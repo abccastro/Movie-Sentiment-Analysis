@@ -24,7 +24,8 @@ Output: "Hello World! This is an email "
 import spacy
 import re
 import urllib3
-
+    
+from spellchecker import SpellChecker
 from nltk.tokenize import word_tokenize
 from emot.emo_unicode import EMOTICONS_EMO
 from flashtext import KeywordProcessor
@@ -116,3 +117,32 @@ def lemmatize_text(texts):
         list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
 
     return list_of_lemmatized_texts
+
+def spell_check_text(text):
+
+    # Load the spaCy language model
+    # See: https://spacy.io/usage/models
+    nlp = spacy.load("en_core_web_sm")
+
+    # Initialize the spell checker
+    spell = SpellChecker()
+
+    # Tokenize the text using Spacy
+    list_of_spell_corrected_text = []
+    for doc in nlp.pipe(text, n_process=2, batch_size=2000, disable=['ner', 'parser']):
+        
+        spell_corrected_text = []
+    # Extract tokens and perform spell checking
+        for token in doc:
+            try:
+                if not spell.correction(token.text) == token.text:
+                    # If the spelling is incorrect, suggest corrections
+                    spell_corrected_text.append(spell.correction(token.text))
+            except Exception as err:
+                print(f"ERROR: {err}")
+                print(f"Text: {token.text}")
+
+        list_of_spell_corrected_text.append(" ".join(spell_corrected_text))
+
+    return list_of_spell_corrected_text
+
