@@ -103,13 +103,16 @@ def lemmatize_text(texts):
     nlp = spacy.load("en_core_web_sm")
 
     list_of_lemmatized_texts = []
-    for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser']):
+    for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['parser']):
         
         lemmatized_texts = []
         for token in doc:
             try:
-                if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
-                    lemmatized_texts.append(token.lemma_)
+                if token.ent_type_:
+                    lemmatize_text.append(token.text)
+                else:
+                    if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
+                        lemmatized_texts.append(token.lemma_)
             except Exception as err:
                 print(f"ERROR: {err}")
                 print(f"Text: {token.lemma_}")
@@ -119,25 +122,27 @@ def lemmatize_text(texts):
     return list_of_lemmatized_texts
 
 def spell_check_text(text):
-
     # Load the spaCy language model
-    # See: https://spacy.io/usage/models
     nlp = spacy.load("en_core_web_sm")
 
     # Initialize the spell checker
     spell = SpellChecker()
 
-    # Tokenize the text using Spacy
     list_of_spell_corrected_text = []
-    for doc in nlp.pipe(text, n_process=2, batch_size=2000, disable=['ner', 'parser']):
-        
+    for doc in nlp.pipe(text, n_process=2, batch_size=2000, disable=['parser']):
         spell_corrected_text = []
-    # Extract tokens and perform spell checking
+
         for token in doc:
             try:
-                if not spell.correction(token.text) == token.text:
-                    # If the spelling is incorrect, suggest corrections
-                    spell_corrected_text.append(spell.correction(token.text))
+                if token.ent_type_:
+                    # If token is a Named Entity, keep the original token
+                    spell_corrected_text.append(token.text)
+                else:
+                    corrected_token = spell.correction(token.text)
+                    if corrected_token is not None and corrected_token != token.text:
+                        spell_corrected_text.append(corrected_token)
+                    else:
+                        spell_corrected_text.append(token.text)  # Keep original token if spelling is correct
             except Exception as err:
                 print(f"ERROR: {err}")
                 print(f"Text: {token.text}")
@@ -145,4 +150,4 @@ def spell_check_text(text):
         list_of_spell_corrected_text.append(" ".join(spell_corrected_text))
 
     return list_of_spell_corrected_text
-
+    
