@@ -26,9 +26,11 @@ import re
 import urllib3
 
 from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 from emot.emo_unicode import EMOTICONS_EMO
 from flashtext import KeywordProcessor
 from bs4 import BeautifulSoup
+from unidecode import unidecode
 
 
 def remove_email_address(text):
@@ -56,6 +58,8 @@ def replace_whitespace(text):
 def replace_nonascii_characters(text):
     # List of all non-ascii characters that needs to be replaced
     text = re.sub('[İı]', 'I', text)
+    # remove diacritics (accented charactes)
+    text = unidecode(text, errors="preserve")
     return text
 
     
@@ -96,14 +100,25 @@ def webscrape_slang_words():
     return slang_word_dict
 
 
+def remove_stopwords(text):
+    # Initialize the English stop words list
+    stop_words = set(stopwords.words('english'))
+    # Tokenize the text
+    tokens = word_tokenize(text)
+    # Remove stop words from the tokenized text
+    filtered_tokens = [token for token in tokens if token not in stop_words and "-" not in token and token.isalpha()]
+    # Join the non-stopwords back into a string
+    filtered_text = " ".join(filtered_tokens)
+    return filtered_text
+
+
 def lemmatize_text(texts):
     # Load the spaCy language model
     # See: https://spacy.io/usage/models
     nlp = spacy.load("en_core_web_sm")
-
+    
     list_of_lemmatized_texts = []
-    for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser']):
-        
+    for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser', 'textcat']):
         lemmatized_texts = []
         for token in doc:
             try:
