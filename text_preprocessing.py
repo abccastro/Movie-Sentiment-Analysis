@@ -21,25 +21,44 @@ Output: "Hello World! This is an email "
 ##########################################################################################################################
 """
 
+import spacy
 import re
 import urllib3
 
+from nltk.tokenize import word_tokenize
 from emot.emo_unicode import EMOTICONS_EMO
-from flashtext import KeywordProcessor
 from flashtext import KeywordProcessor
 from bs4 import BeautifulSoup
 
 
 def remove_email_address(text):
-    pattern_email = r'\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,7}\b'    
-    return re.sub(pattern_email, '', text)
+    pattern = r'\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,7}\b'    
+    return re.sub(pattern, '', text)
 
 
 def remove_hyperlink(text):
-    pattern_url = r'https?://(?:www\.)?[\w\.-]+(?:\.[a-z]{2,})+(?:/[-\w\.,/]*)*(?:\?[\w\%&=]*)?'
-    return re.sub(pattern_url, '', text)
+    pattern = r'https?://(?:www\.)?[\w\.-]+(?:\.[a-z]{2,})+(?:/[-\w\.,/]*)*(?:\?[\w\%&=]*)?'
+    return re.sub(pattern, '', text)
 
 
+def remove_non_alphanumeric_char(text):
+    # remove non-alpha numeric characters except for the following
+    # > hyphen (-) that is in between alphanumeric
+    pattern = r'[.,?!\'"():;\[\]{}@#^$%&*_+=<>\\|`~]|-(?!\w)|(?<!\w)-'
+    return re.sub(pattern, ' ', text)
+
+
+def replace_whitespace(text):
+    pattern = r'\s+'
+    return re.sub(pattern, ' ', text)
+
+
+def replace_nonascii_characters(text):
+    # List of all non-ascii characters that needs to be replaced
+    text = re.sub('[İı]', 'I', text)
+    return text
+
+    
 def get_emojis():
     emoji_dict = KeywordProcessor()
     for k,v in EMOTICONS_EMO.items():
@@ -59,16 +78,41 @@ def webscrape_slang_words():
     http = urllib3.PoolManager()
     slang_word_dict = KeywordProcessor()
 
-    # NOTE: need to save the content in a file
-    for i in range(97,123):
-        page = http.request('GET', 'https://www.noslang.com/dictionary/'+chr(i))
-        soup = BeautifulSoup(page.data, 'html.parser')
+    try:
+        # TODO: need to save the content in a file
+        for i in range(97,123):
+            page = http.request('GET', 'https://www.noslang.com/dictionary/'+chr(i))
+            soup = BeautifulSoup(page.data, 'html.parser')
 
-        for elem in soup.findAll('div', class_="dictonary-word"): 
-            slang_word = elem.find('abbr').get_text()
+            for elem in soup.findAll('div', class_="dictonary-word"): 
+                slang_word = elem.find('abbr').get_text()
 
-            key = slang_word[0 : slang_word.rfind(":")-1]
-            value = elem.find('dd', class_="dictonary-replacement").get_text()
-            slang_word_dict.add_keyword(key.lower(), value.lower())
+                key = slang_word[0 : slang_word.rfind(":")-1]
+                value = elem.find('dd', class_="dictonary-replacement").get_text()
+                slang_word_dict.add_keyword(key.lower(), value.lower())
+    except Exception as err:
+        print(f"ERROR: {err}")
     
     return slang_word_dict
+
+
+def lemmatize_text(texts):
+    # Load the spaCy language model
+    # See: https://spacy.io/usage/models
+    nlp = spacy.load("en_core_web_sm")
+
+    list_of_lemmatized_texts = []
+    for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser']):
+        
+        lemmatized_texts = []
+        for token in doc:
+            try:
+                if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
+                    lemmatized_texts.append(token.lemma_)
+            except Exception as err:
+                print(f"ERROR: {err}")
+                print(f"Text: {token.lemma_}")
+
+        list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
+
+    return list_of_lemmatized_texts
