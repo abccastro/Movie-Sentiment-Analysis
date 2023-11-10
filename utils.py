@@ -21,6 +21,9 @@ Output: "Hello, World!"
 
 import json
 import re
+import pickle
+
+from flashtext import KeywordProcessor
 
 
 def extract_specific_key(list_of_dicts, dict_keys):
@@ -48,3 +51,30 @@ def convert_str_to_dict(text, dict_keys):
         print(f"Input text: {text}")
 
     return extract_specific_key(list_of_dicts, dict_keys)
+
+
+def save_pickle_file(data_object, filename):
+    """
+    Function that saves a pickle file (will override if it already exists)
+    """
+    try:
+        with open(filename, 'wb') as file:
+            pickle.dump(data_object, file)
+    except Exception as err:
+        print(f"ERROR: {err}")
+
+
+def open_pickle_file(filename):
+    """
+    Function that reads a pickle file
+    """
+    data_object = None
+    try:
+        # open a pickle file
+        with open(filename, 'rb') as file:
+            data_object = pickle.load(file)
+    except Exception as err:
+        print(f"ERROR: {err}")
+
+    return data_object
+    
