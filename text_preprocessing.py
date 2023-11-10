@@ -81,5 +81,22 @@ def webscrape_slang_words():
     
     return slang_word_dict
 
+
+# Lemmatization program
+
+import nltk
+nltk.download('wordnet')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('punkt')
+
 def lemmatize_word(text):
     print('Hello World',text)
+    
+
+
+
+
+
+
+    
+
