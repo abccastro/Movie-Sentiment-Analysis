@@ -163,7 +163,7 @@ def lemmatize_text(texts):
     return list_of_lemmatized_texts
 
 
-def spell_check_text(text):
+def check_word_spelling(text):
     # Load the spaCy language model
     nlp = spacy.load("en_core_web_sm")
 
