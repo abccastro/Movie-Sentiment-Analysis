@@ -21,6 +21,7 @@ Output: "Hello World! This is an email "
 ##########################################################################################################################
 """
 
+import pandas as pd
 import spacy
 import re
 import urllib3
@@ -41,7 +42,7 @@ def remove_email_address(text):
 
 
 def remove_hyperlink(text):
-    pattern = r'https?://(?:www\.)?[\w\.-]+(?:\.[a-z]{2,})+(?:/[-\w\.,/]*)*(?:\?[\w\%&=]*)?'
+    pattern = r'(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})'              
     return re.sub(pattern, '', text)
 
 
@@ -138,32 +139,73 @@ def remove_stopwords(text, list_of_stopwords):
     return filtered_text
 
 
-def lemmatize_text(texts):
-    # Load the spaCy language model
-    # See: https://spacy.io/usage/models
-    nlp = spacy.load("en_core_web_sm")
-    
+def lemmatize_text(texts, nlp):
     list_of_lemmatized_texts = []
-    # customize spacy pipeline to apply two processors to a batch of 2000 records, and to exclude 'ner', 'parser' and 'textcat'
-    for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser', 'textcat']):
-        lemmatized_texts = []
-        for token in doc:
-            try:
-                if token.ent_type_:
-                    lemmatize_text.append(token.text)
-                else:
-                    if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
-                        lemmatized_texts.append(token.lemma_)
-            except Exception as err:
-                print(f"ERROR: {err}")
-                print(f"Text: {token.lemma_}")
-
-        list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
+    try:
+        for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser', 'textcat']):
+            lemmatized_texts = []
+            for token in doc:
+                if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
+                    lemmatized_texts.append(token.lemma_)
+            list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
+    except Exception as err:
+        print(f"ERROR: {err}")
 
     return list_of_lemmatized_texts
 
 
+def get_entity_label(label):
+    if label in ['GPE', 'LOC', 'FAC']:
+        label = 'LOCATION'
+    elif label in ['DATE', 'TIME']:
+        label = 'DATE_TIME'
+    elif label in ['ORG']:
+        label = 'ORGANIZATION'
+    return label
+
+
+def extract_name_entity(texts, nlp, name_entities_df):
+    list_of_non_ner = []
+    try:
+        for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['tagger', 'lemmatizer', 'parser', 'textcat']):
+            # Original text
+            doc_text = doc.text_with_ws
+            # Iterate through list of NERs
+            for ent in doc.ents:
+                entity_text = ent.text
+                label = get_entity_label(ent.label_)
+
+                if label not in ['ORDINAL', 'CARDINAL', 'PERCENT', 'QUANTITY', 'NORP', 'MONEY', 'LAW']:
+                    row_index = len(list_of_non_ner)             
+                    # Check if the row index exists 
+                    if row_index in name_entities_df.index:
+                        # Check if the current value is NaN
+                        if isinstance(name_entities_df.loc[row_index, label], float) and pd.isna(name_entities_df.loc[row_index, label]):
+                            # If NaN, replace it with a new list containing the specified value
+                            name_entities_df.at[row_index, label] = [entity_text]
+                        else:
+                            # If not NaN, append the value to the existing list
+                            name_entities_df.loc[row_index, label].append(entity_text)  
+                    else:
+                        # Add a new row with the specified index and value
+                        name_entities_df = name_entities_df.append(pd.Series({label: [entity_text]}, name=row_index))
+                    # Replace the NER with empty string
+
+                if label not in ['NORP', 'MONEY']:
+                    doc_text = doc_text.replace(entity_text, '')
+
+            # List of text without NER
+            list_of_non_ner.append(doc_text)
+
+    except Exception as err:
+        print(f"ERROR: {err}")
+
+    return list_of_non_ner, name_entities_df
+
+
 def check_word_spelling(text):
+    # NOTE: FOR IMPROVEMENT: Currently not being used
+    
     # Load the spaCy language model
     nlp = spacy.load("en_core_web_sm")
 
