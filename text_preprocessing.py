@@ -130,10 +130,12 @@ def webscrape_slang_words():
     return slang_word_dict
 
 
-def remove_stopwords(text, list_of_stopwords):  
-    # remove stop words from the tokenized text
+def remove_stopwords(text, list_of_stopwords):
+    # Tokenize the text
     tokens = word_tokenize(text)
+    # Remove stop words from the tokenized text
     filtered_tokens = [token for token in tokens if token not in list_of_stopwords and "-" not in token and token.isalpha()]
+    # Join the non-stopwords back into a string
     filtered_text = " ".join(filtered_tokens)
 
     return filtered_text
