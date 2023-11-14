@@ -144,10 +144,10 @@ def remove_stopwords(text, list_of_stopwords):
 def lemmatize_text(texts, nlp):
     list_of_lemmatized_texts = []
     try:
-        for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser', 'textcat']):
+        for doc in nlp.pipe(texts, n_process=3, batch_size=1000, disable=['ner', 'parser']):
             lemmatized_texts = []
             for token in doc:
-                if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
+                if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha() and len(token.lemma_) > 1:
                     lemmatized_texts.append(token.lemma_)
             list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
     except Exception as err:
@@ -169,7 +169,7 @@ def get_entity_label(label):
 def extract_name_entity(texts, nlp, name_entities_df):
     list_of_non_ner = []
     try:
-        for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['tagger', 'lemmatizer', 'parser', 'textcat']):
+        for doc in nlp.pipe(texts, n_process=3, batch_size=1000, disable=['tagger', 'lemmatizer', 'parser']):
             # Original text
             doc_text = doc.text_with_ws
             # Iterate through list of NERs
