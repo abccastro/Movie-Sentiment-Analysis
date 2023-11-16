@@ -236,4 +236,3 @@ def check_word_spelling(text):
         list_of_spell_corrected_text.append(" ".join(spell_corrected_text))
 
     return list_of_spell_corrected_text
-    
