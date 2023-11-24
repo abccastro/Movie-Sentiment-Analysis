@@ -1,54 +1,61 @@
 # app.py
 import streamlit as st
 import pandas as pd
-import datetime
 import numpy as np
+import datetime
 import altair as alt
 
-# Create a dummy DataFrame
-data = {
-    'Input1': ['Text_A', 'Text_B', 'Text_C', 'Text_D', 'Text_E', 'Text_A', 'Text_B', 'Text_C'],
-    'Input2': ['Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5', 'Option 1', 'Option 2', 'Option 3'],
-    'Input3': [datetime.date(2022, 1, 1), datetime.date(2022, 2, 2), datetime.date(2022, 3, 3),
-               datetime.date(2022, 4, 4), datetime.date(2022, 5, 5), datetime.date(2022, 6, 6),
-               datetime.date(2022, 7, 7), datetime.date(2022, 8, 8)],
-    'Numeric1': [10, 20, 15, 25, 30, 12, 18, 22],
-    'Numeric2': [50, 40, 30, 20, 10, 45, 35, 25]
-}
-
-df = pd.DataFrame(data)
-
 def generate_report(filtered_df):
-    # Calculate some hypothetical metrics using the numerical columns
-    total_numeric1 = filtered_df['Numeric1'].sum()
-    average_numeric2 = filtered_df['Numeric2'].mean()
+    # Calculate some metrics using the numerical columns
+    total_salary = filtered_df['Salary'].sum()
+    average_work_hours = filtered_df['Work_Hours'].mean()
 
     # Create a bar chart
     bar_chart = alt.Chart(filtered_df).mark_bar().encode(
-        x='Input1',
-        y='Numeric1',
-        color='Input2',
-        tooltip=['Input1', 'Numeric1']
+        x='Department',
+        y='Salary',
+        color='Gender',
+        tooltip=['Department', 'Salary']
     ).properties(
-        title='Numeric1 by Input1 (colored by Input2)',
+        title='Salary by Department (colored by Gender)',
         width=500
     )
 
     # Create a line chart
     line_chart = alt.Chart(filtered_df).mark_line().encode(
-        x='Input1',
-        y='Numeric2',
-        color='Input2',
-        tooltip=['Input1', 'Numeric2']
+        x='Department',
+        y='Work_Hours',
+        color='Gender',
+        tooltip=['Department', 'Work_Hours']
     ).properties(
-        title='Numeric2 by Input1 (colored by Input2)',
+        title='Work Hours by Department (colored by Gender)',
+        width=500
+    )
+
+    # Create a bar chart for Age Distribution by Gender
+    age_distribution_chart = alt.Chart(filtered_df).mark_bar().encode(
+        x='Age:Q',
+        y='count()',
+        color='Gender:N'
+    ).properties(
+        title='Age Distribution by Gender',
+        width=500
+    )
+
+    # Create a bar chart for Salary Distribution by Department
+    salary_distribution_chart = alt.Chart(filtered_df).mark_bar().encode(
+        x='Department:N',
+        y='average(Salary):Q',
+        color='Gender:N'
+    ).properties(
+        title='Salary Distribution by Department',
         width=500
     )
 
     # Display the charts
     st.header("Report:")
-    st.write(f"Total Numeric1: {total_numeric1}")
-    st.write(f"Average Numeric2: {average_numeric2}")
+    st.write(f"Total Salary: {total_salary}")
+    st.write(f"Average Work Hours: {average_work_hours}")
 
     st.subheader("Bar Chart:")
     st.altair_chart(bar_chart)
@@ -56,23 +63,40 @@ def generate_report(filtered_df):
     st.subheader("Line Chart:")
     st.altair_chart(line_chart)
 
+    st.subheader("Age Distribution by Gender:")
+    st.altair_chart(age_distribution_chart)
+
+    st.subheader("Salary Distribution by Department:")
+    st.altair_chart(salary_distribution_chart)
+
 def main():
     st.title("User Input Streamlit App")
 
-    # Input 1: Textbox
-    input_text = st.text_input("Input 1: Enter some text")
+    # Read the data from the CSV file
+    file_path = 'dummy_dataset_10000_records.csv'  # Update with your file path
+    df = pd.read_csv(file_path)
 
-    # Input 2: Dropdown
-    options = ["Option 1", "Option 2", "Option 3", "Option 4", "Option 5"]
-    input_dropdown = st.selectbox("Input 2: Select an option", options)
+    # Input 1: Textbox for Department (case-insensitive)
+    input_department = st.text_input("Input 1: Enter Department", '').lower()
 
-    # Input 3: Date selection
-    input_date = st.date_input("Input 3: Select a date", datetime.date.today())
+    # Input 2: Dropdown for Gender
+    options_gender = ["Male", "Female"]
+    input_gender = st.selectbox("Input 2: Select Gender", options_gender)
+
+    # Input 3: Date selection for Joining Date
+    input_joining_date = st.date_input("Input 3: Select Joining Date", datetime.date.today())
+
+    # Convert input_joining_date to Pandas Timestamp
+    input_joining_date = pd.to_datetime(input_joining_date)
 
     # Button to trigger the display
-    if st.button("Search Records"):
+    if st.button("Filter and Generate Report"):
         # Filter DataFrame based on selected values
-        filtered_df = df[(df['Input1'] == input_text) & (df['Input2'] == input_dropdown) & (df['Input3'] == input_date)]
+        filtered_df = df[
+            (df['Department'].str.lower() == input_department) &
+            (pd.to_datetime(df['Joining_Date']) > input_joining_date) &
+            (df['Gender'] == input_gender)
+        ]
 
         # Display filtered records and generate graphical report
         st.header("Filtered Records:")
