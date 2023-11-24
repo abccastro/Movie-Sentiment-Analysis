@@ -2,14 +2,12 @@
 import streamlit as st
 
 def main():
-    st.title("Interactive Streamlit App")
-    
-    # Add a slider
-    age = st.slider("Select your age", 0, 100, 25)
+    st.title("Streamlit App with Dropdown")
 
-    # Add a button
-    if st.button("Click me"):
-        st.write(f"You clicked the button! Your age is {age}.")
+    # Add a dropdown
+    selected_option = st.selectbox("Select an option", ["Option 1", "Option 2", "Option 3"])
+
+    st.write(f"You selected: {selected_option}")
 
 if __name__ == "__main__":
     main()
