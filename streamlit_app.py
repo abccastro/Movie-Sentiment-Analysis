@@ -52,28 +52,29 @@ def generate_report(filtered_df):
         width=300
     )
 
-    # Display the charts in a single row
-    st.header("Report:")
-    st.write(f"Total Salary: {total_salary}")
-    st.write(f"Average Work Hours: {average_work_hours}")
 
-    charts_row1, charts_row2 = st.columns(2)
+    with st.expander("Detailed Report", expanded=True):  # Set expanded to True to initially show the report
+        # Display the charts in a single row
+        st.header("Report:")
+        st.write(f"Total Salary: {total_salary}")
+        st.write(f"Average Work Hours: {average_work_hours}")
+        charts_row1, charts_row2 = st.columns(2)
 
-    with charts_row1:
-        st.subheader("Bar Chart:")
-        st.altair_chart(bar_chart)
+        with charts_row1:
+            st.subheader("Bar Chart:")
+            st.altair_chart(bar_chart)
 
-    with charts_row1:
-        st.subheader("Line Chart:")
-        st.altair_chart(line_chart)
+        with charts_row1:
+            st.subheader("Line Chart:")
+            st.altair_chart(line_chart)
 
-    with charts_row2:
-        st.subheader("Age Distribution by Gender:")
-        st.altair_chart(age_distribution_chart)
+        with charts_row2:
+            st.subheader("Age Distribution by Gender:")
+            st.altair_chart(age_distribution_chart)
 
-    with charts_row2:
-        st.subheader("Salary Distribution by Department:")
-        st.altair_chart(salary_distribution_chart)
+        with charts_row2:
+            st.subheader("Salary Distribution by Department:")
+            st.altair_chart(salary_distribution_chart)
 
 def main():
     st.title("User Input Streamlit App")
@@ -93,7 +94,9 @@ def main():
     input_joining_date = st.date_input("Input 3: Select Joining Date", datetime.date.today())
 
     # Button to trigger the display
-    if st.button("Filter and Generate Report"):
+    show_report = st.button("Filter and Generate Report")
+
+    if show_report:
         # Convert input_joining_date to Pandas Timestamp
         input_joining_date = pd.to_datetime(input_joining_date)
 
@@ -103,15 +106,16 @@ def main():
             (pd.to_datetime(df['Joining_Date']) > input_joining_date) &
             (df['Gender'] == input_gender)
         ]
+        with st.expander("Filtered Records", expanded=True):
+            # Display filtered records and generate graphical report
+            st.header("Filtered Records:")
+            if filtered_df.empty:
+                st.warning("No records found with the selected values.")
+            else:
+                st.dataframe(filtered_df)
 
-        # Display filtered records and generate graphical report
-        st.header("Filtered Records:")
-        if filtered_df.empty:
-            st.warning("No records found with the selected values.")
-        else:
-            st.dataframe(filtered_df)
-
-            # Generate and display the report
+        # Generate and display the report
+        if not filtered_df.empty:
             generate_report(filtered_df)
 
 if __name__ == "__main__":
