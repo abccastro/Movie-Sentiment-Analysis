@@ -84,7 +84,7 @@ def get_glove_embeddings():
     embeddings_index = {}
 
     try:
-        with open('./data/glove.6B.100d.txt', 'r', encoding="utf-8") as file:
+        with open('./data/glove.6B.50d.txt', 'r', encoding="utf-8") as file:
             for line in file:
                 values = line.split()
                 word = values[0]
