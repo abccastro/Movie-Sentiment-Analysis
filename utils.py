@@ -21,6 +21,7 @@ Output: "Hello, World!"
 
 import json
 import re
+import numpy as np
 import pickle
 
 from flashtext import KeywordProcessor
@@ -77,4 +78,20 @@ def open_pickle_file(filename):
         print(f"ERROR: {err}")
 
     return data_object
+
+
+def get_glove_embeddings():
+    embeddings_index = {}
+
+    try:
+        with open('./data/glove.6B.100d.txt', 'r', encoding="utf-8") as file:
+            for line in file:
+                values = line.split()
+                word = values[0]
+                vector = np.asarray(values[1:], "float32")
+                embeddings_index[word] = vector
+    except Exception as err:
+        print(f"ERROR: {err}")
+
+    return embeddings_index
     
