@@ -46,6 +46,12 @@ def remove_hyperlink(text):
     return re.sub(pattern, '', text)
 
 
+def replace_html_char(text):
+    text = text.replace("&amp;", "and")
+    text = text.replace("&lt;", "<")
+    return text
+
+
 def remove_non_alphanumeric_char(text):
     # remove non-alpha numeric characters except for the following
     # > hyphen (-) that is in between alphanumeric
@@ -73,6 +79,7 @@ def get_emojis():
             words = re.split(r',| or ', v.lower())
             # get only the first element. remove "smiley" word.
             word = words[0].replace(" smiley", "")
+            k = k.replace("‑", "-")
             # put in a dictionary
             emoji_dict.add_keyword(k, words[0])
 

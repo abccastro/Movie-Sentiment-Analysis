@@ -95,3 +95,12 @@ def get_glove_embeddings():
 
     return embeddings_index
     
+
+def get_word_embedding_matrix(word_index, embeddings_index, EMBEDDING_DIM):
+    embedding_matrix = np.zeros(((len(word_index)+1), EMBEDDING_DIM))
+    for word, idx in word_index.items():
+        embedding_vector = embeddings_index.get(word)
+        if embedding_vector is not None:
+            # Words not found in embedding index will be changed to zeroes
+            embedding_matrix[idx] = embedding_vector
+    return embedding_matrix
