@@ -80,7 +80,7 @@ def open_pickle_file(filename):
     return data_object
 
 
-def get_glove_embeddings(filename):
+def load_embeddings(filename):
     embeddings_index = {}
     try:
         with open(filename, 'r', encoding="utf-8") as file:
@@ -95,12 +95,21 @@ def get_glove_embeddings(filename):
     return embeddings_index
 
 
-def get_word_embedding_matrix(word_index, embeddings_index, EMBEDDING_DIM):
+def create_embedding_matrix(word_index, embeddings_index, EMBEDDING_DIM):
     embedding_matrix = np.zeros(((len(word_index)+1), EMBEDDING_DIM))
     for word, idx in word_index.items():
         embedding_vector = embeddings_index.get(word)
         if embedding_vector is not None:
             # Words not found in embedding index will be changed to zeroes
             embedding_matrix[idx] = embedding_vector
+    return embedding_matrix
+
+
+def create_word2vec_embedding_matrix(word_index, embedding_path, embedding_dim):
+    word2vec_model = KeyedVectors.load_word2vec_format(embedding_path, binary=True)
+    embedding_matrix = np.zeros((len(word_index) + 1, embedding_dim))
+    for word, i in word_index.items():
+        if word in word2vec_model:
+            embedding_matrix[i] = word2vec_model[word]
     return embedding_matrix
     
