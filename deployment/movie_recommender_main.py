@@ -26,7 +26,7 @@ def get_top_closest_movie_names(movie_name, df, top_n=5):
         top_closest_match_idx = np.argsort(similarity_scores[0])[::-1][:top_n]
         top_closest_match_name = movie_names.loc[top_closest_match_idx.tolist()].values
     except Exception as err:
-            print(f"ERROR: {err}")
+        print(f"ERROR: {err}")
 
     return top_closest_match_name
 
@@ -82,7 +82,7 @@ def get_movie_recommendation(movie_name, top_n=10):
             recommended_movie_list = recommended_movie_list.reset_index(drop=True)
 
     except Exception as err:
-            print(f"ERROR: {err}")
+        print(f"ERROR: {err}")
 
     return recommended_movie_list
 
