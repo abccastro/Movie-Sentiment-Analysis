@@ -93,10 +93,6 @@ if __name__ == '__main__':
 
     movie_name = input("Enter movie name: ")
 
-    try:
-        # return a list of recommended movies
-        recommended_movie_list = get_movie_recommendation(movie_name, top_n=10)
-        print(recommended_movie_list)
-
-    except Exception as err:
-        print(f"ERROR: {err}")
+    # return a list of recommended movies
+    recommended_movie_list = get_movie_recommendation(movie_name, top_n=10)
+    print(recommended_movie_list)
