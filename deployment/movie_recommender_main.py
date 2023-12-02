@@ -12,17 +12,21 @@ def get_top_closest_movie_names(movie_name, df, top_n=5):
     '''
     This function recommends movie titles that have the closest match to the input
     '''
-    movie_names = df.drop_duplicates()
-    movie_names = movie_names.reset_index(drop=True)
+    top_closest_match_name = []
+    try:
+        movie_names = df.drop_duplicates()
+        movie_names = movie_names.reset_index(drop=True)
 
-    vectorizer = utils.open_pickle_file('movie_recommender_vectorizer.pkl')
-    movie_title_vectors = vectorizer.transform(movie_names)
+        vectorizer = utils.open_pickle_file('movie_recommender_vectorizer.pkl')
+        movie_title_vectors = vectorizer.transform(movie_names)
 
-    query_vector = vectorizer.transform([movie_name])
-    similarity_scores = cosine_similarity(query_vector, movie_title_vectors)
+        query_vector = vectorizer.transform([movie_name])
+        similarity_scores = cosine_similarity(query_vector, movie_title_vectors)
 
-    top_closest_match_idx = np.argsort(similarity_scores[0])[::-1][:top_n]
-    top_closest_match_name = movie_names.loc[top_closest_match_idx.tolist()].values
+        top_closest_match_idx = np.argsort(similarity_scores[0])[::-1][:top_n]
+        top_closest_match_name = movie_names.loc[top_closest_match_idx.tolist()].values
+    except Exception as err:
+            print(f"ERROR: {err}")
 
     return top_closest_match_name
 
