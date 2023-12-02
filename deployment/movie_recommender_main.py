@@ -76,12 +76,9 @@ def get_movie_recommendation(movie_name, top_n=10):
 
             # Get the first 10 games in the list
             recommended_movie_list = movie_list.head(top_n)
-
-            # Get the distance of the movies similar to the input
-            recommended_distances = np.array(vg_combined_dist_idx_df['Distance'].head(top_n))
-
+            recommended_movie_list = recommended_movie_list.drop(columns=['imdb_id'], axis=1)
+            
             print(f"Top 10 Recommended Movies for '{movie_name}'")
-
             recommended_movie_list = recommended_movie_list.reset_index(drop=True)
 
     except Exception as err:
