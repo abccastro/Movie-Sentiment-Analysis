@@ -8,7 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-def get_top_closest_movie_names(movie_name, df, top_n=5):
+def get_top_closest_movie_names(movie_name, df, top_n=10):
     '''
     This function recommends movie titles that have the closest match to the input
     '''
@@ -47,7 +47,7 @@ def get_movie_recommendation(movie_name, top_n=10):
         
         if movie_idx.empty:
             # If the movie entered by the user doesn't exist in the records, the program will recommend a new movie similar to the input
-            top_closest_match_name = get_top_closest_movie_names(movie_name=movie_name, df=movie_recommender_metadata['title'], top_n=5)
+            top_closest_match_name = get_top_closest_movie_names(movie_name=movie_name, df=movie_recommender_metadata['title'], top_n=top_n)
 
             print(f"'{movie_name}' doesn't exist in the records.\n")
             print(f"You may want to try the movies which are the closest match to the input.")
