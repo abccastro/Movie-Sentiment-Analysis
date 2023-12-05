@@ -6,6 +6,20 @@ import numpy as np
 import datetime
 import altair as alt
 import torch
+import text_preprocessing as tp
+import utils
+import contractions
+# import os
+# import spacy
+import pickle
+# import os
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from nltk.corpus import stopwords
 
 from sentence_transformers import SentenceTransformer,util
 
@@ -325,13 +339,114 @@ import torch
 #     df_result.sort_values(by='Cosine Similarity', ascending=False)
 #     return df_result
 
-def compare_with_existing_embeddings(all_chunks, input_val,sdate="",edate=""):
+# def compare_with_existing_embeddings(all_chunks, input_val,sdate="",edate=""):
+#     # Load the Sentence Transformer model
+#     model = SentenceTransformer('msmarco-MiniLM-L6-cos-v5')
+    
+#     # Load the existing DataFrame with embeddings
+#     df = all_chunks.copy()  # Make a copy to avoid modifying the original DataFrame
+
+#     # Check if sdate is after edate
+#     try:
+#         sdate_num = int(sdate)
+#         edate_num = int(edate)
+#     except ValueError:
+#         st.warning("Invalid date format. Please provide valid numerical dates.")
+#         return pd.DataFrame()
+    
+#     if sdate_num > edate_num:
+#         st.warning("Start date cannot be after end date. Please provide valid date ranges.")
+#         return pd.DataFrame()
+
+#     if not df.empty and sdate_num and edate_num:
+#         df['date'] = pd.to_numeric(df['date'], errors='coerce')  # Convert 'date' to numeric
+#         df = df[(df['date'] >= sdate_num) & (df['date'] <= edate_num)]
+        
+#     # Encode the input review
+#     input_emb = model.encode(input_val).astype(np.float32)
+
+#     # Convert the 'Emb' column from string to NumPy array
+#     df['Emb'] = df['Emb'].apply(lambda x: np.fromstring(x[1:-1], sep=' ').astype(np.float32))
+
+#     # Initialize an empty list to store matching reviews
+#     matching_reviews = []
+
+#     # Set a threshold for similarity, e.g., 0.4
+#     threshold = 0.4
+
+#     # Add a Streamlit progress bar
+#     progress_bar = st.progress(0)
+  
+
+#     # Iterate through the reviews
+#     total_reviews = len(df)
+#     for i, row in df.iterrows():
+#         # Extract the review details
+#         review_text = row['Review']
+
+#         # Encode the current review
+#         emb = row['Emb']
+
+#         # Compute cosine similarity
+#         cos_sim = util.pytorch_cos_sim(torch.tensor([input_emb]), torch.tensor([emb])).item()
+
+#         # Check if similarity is above the threshold
+#         if cos_sim > threshold:
+#             metadata = {
+#                 'Index': i,
+#                 'Review': review_text,
+#                 'cosine_similarity': cos_sim,
+#                 'sentiment': row['viwers_sentiment'],
+#                 'titles': row['movie_title'],
+#                 'date': row['movie_year'],
+#             }
+#             matching_reviews.append(metadata)
+
+#         # Update the progress bar
+#         progress_bar.progress((i + 1) / total_reviews)
+
+#     # Close the progress bar once processing is complete
+#     progress_bar.empty()
+
+#     # Create a DataFrame with the matching reviews and sort it
+#     df_result = pd.DataFrame(matching_reviews)
+    
+#     # Filter the DataFrame based on date if both start and end dates are provided
+    
+
+#     if not df_result.empty:
+#         df_result = df_result.sort_values(by='cosine_similarity', ascending=False)
+#         return df_result
+#     else:
+#         # Handle the case where the DataFrame is empty
+#         return pd.DataFrame()
+
+def compare_with_existing_embeddings(all_chunks, input_val, sdate="", edate=""):
     # Load the Sentence Transformer model
     model = SentenceTransformer('msmarco-MiniLM-L6-cos-v5')
     
     # Load the existing DataFrame with embeddings
     df = all_chunks.copy()  # Make a copy to avoid modifying the original DataFrame
+
+    # Check if sdate is after edate
+    try:
+        sdate_num = int(sdate)
+        edate_num = int(edate)
+    except ValueError:
+        st.warning("Invalid date format. Please provide valid numerical dates.")
+        return pd.DataFrame()
     
+    if sdate_num > edate_num:
+        st.warning("Start date cannot be after end date. Please provide valid date ranges.")
+        return pd.DataFrame()
+
+    # Convert 'date' to numeric
+    df['movie_year'] = pd.to_numeric(df['movie_year'], errors='coerce')
+
+    # Filter the DataFrame based on date if both start and end dates are provided
+    if not df.empty and sdate_num and edate_num:
+        df = df[(df['movie_year'] >= sdate_num) & (df['movie_year'] <= edate_num)]
+        
     # Encode the input review
     input_emb = model.encode(input_val).astype(np.float32)
 
@@ -345,19 +460,7 @@ def compare_with_existing_embeddings(all_chunks, input_val,sdate="",edate=""):
     threshold = 0.4
 
     # Add a Streamlit progress bar
-    progress_bar = st.progress(0)
-
-    # Check if sdate is after edate
-    try:
-        sdate_num = int(sdate)
-        edate_num = int(edate)
-    except ValueError:
-        st.warning("Invalid date format. Please provide valid numerical dates.")
-        return pd.DataFrame()
-
-    if sdate_num > edate_num:
-        st.warning("Start date cannot be after end date. Please provide valid date ranges.")
-        return pd.DataFrame()
+    # progress_bar = st.progress(0)
 
     # Iterate through the reviews
     total_reviews = len(df)
@@ -384,25 +487,21 @@ def compare_with_existing_embeddings(all_chunks, input_val,sdate="",edate=""):
             matching_reviews.append(metadata)
 
         # Update the progress bar
-        progress_bar.progress((i + 1) / total_reviews)
+        # progress_bar.progress((i + 1) / total_reviews)
 
     # Close the progress bar once processing is complete
-    progress_bar.empty()
+    # progress_bar.empty()
 
     # Create a DataFrame with the matching reviews and sort it
     df_result = pd.DataFrame(matching_reviews)
     
-    # Filter the DataFrame based on date if both start and end dates are provided
-    if not df_result.empty and sdate_num and edate_num:
-        df_result['date'] = pd.to_numeric(df_result['date'], errors='coerce')  # Convert 'date' to numeric
-        df_result = df_result[(df_result['date'] >= sdate_num) & (df_result['date'] <= edate_num)]
-
     if not df_result.empty:
         df_result = df_result.sort_values(by='cosine_similarity', ascending=False)
         return df_result
     else:
         # Handle the case where the DataFrame is empty
         return pd.DataFrame()
+
 
 def filter_by_movie_title(df, input_title,sdate="",edate=""):
 # Check if the 'movie' column exists in the DataFrame
@@ -796,31 +895,218 @@ def filter_top10movie_neu(df_result):
         # Handle the case where the DataFrame is empty or missing required columns
         return pd.DataFrame()
 
-def process_input_text(df,input_text):
+def process_input_text(df,input_movie_text,review_text):
     # Split the input text by "/"
-    values = input_text.split("/")
+    # values = input_text.split("/")
 
     # Check if there are at least two values
-    if len(values) >= 2:
+    # if len(values) >= 2:
         # Extract the title and review
-        title = values[0].strip()
-        review = values[1].strip()
+    title = input_movie_text
+    review = review_text
 
-        # Filter the DataFrame based on the title
-        filtered_df = df[df['movie_title'].str.lower().str.strip() == title.lower()]
+    # Filter the DataFrame based on the title
+    filtered_df = df[df['movie_title'].str.lower().str.strip() == title.lower()]
 
-        # Create a new DataFrame to store the modified data
-        new_df = filtered_df.copy()
+    # Create a new DataFrame to store the modified data
+    new_df = filtered_df.copy()
 
-        # Replace the "Review" column with the review variable
-        new_df['Review'] = review
+    # Replace the "Review" column with the review variable
+    new_df['Review'] = review
 
-        # Return the new DataFrame
-        return new_df
+    # Return the new DataFrame
+    return new_df
+    # else:
+    #     # Handle the case where there are not enough values
+    #     print("Error: Input text should contain at least two values.")
+    #     return pd.DataFrame()
+    
+# ---------->>>>>>>>>> START
+
+# nlp = spacy.load("en_core_web_sm")
+list_of_stopwords = set(stopwords.words('english'))
+
+# initializer dictionaries for data preprocessing
+emoji_dict = tp.get_emojis()
+slang_word_dict = tp.get_slang_words(webscraped=False)
+
+
+def conduct_text_preprocessing(text, set_n=1):
+    '''
+    This function contains processes for data cleaning
+    '''
+    # try:
+    if set_n == 1:
+        # Remove non-grammatical text
+        text = tp.remove_email_address(text)
+        text = tp.remove_hyperlink(text)
+
+        # Replace non-ascii characters as there are Python libraries limiting this feature
+        text = tp.replace_nonascii_characters(text)
+
+        # Replace emojis with English word/s
+        text = emoji_dict.replace_keywords(text)
+
+        # Handle contractions
+        text = contractions.fix(text)
+
+        # Replace slang words
+        text = slang_word_dict.replace_keywords(text)
+    
+    elif set_n == 3:
+        # Remove non-alphanumeric characters except for the following
+        text = tp.remove_non_alphanumeric_char(text)
+
+        # Remove leading and trailing whitespaces
+        text = text.strip()
+
+        # Replace multiple whitespaces with a single space
+        text = tp.replace_whitespace(text)
+
+        # Remove stopwords
+        text = tp.remove_stopwords(text, list_of_stopwords)
+
+    # except Exception as err:
+    #     print(f"ERROR: {err}")
+    #     print(f"Input Text: {text}")
+
+    return text
+
+
+# def remove_ner(df):
+#     '''
+#     This function removes Named Entity Recognition (NER)s
+#     '''
+#     # Dummy dataframe for extracted NERs
+#     column_names = ['PERSON', 'WORK_OF_ART', 'LOCATION', 'DATE_TIME', 'ORGANIZATION', 'PRODUCT', 'EVENT', 'LANGUAGE']
+#     movie_name_entities_df = pd.DataFrame(columns=column_names)
+
+#     # Extract and remove name entities
+#     df['Review'], movie_name_entities_df = tp.extract_name_entity(df, nlp, movie_name_entities_df)
+#     return df
+
+
+def generate_sentiment(df):
+    '''
+    This function generates sentiments to the reviews using Naive Bayes model
+    '''
+    sentiment_dict = {0: 'negative', 1: 'neutral', 2: 'positive'}
+    predictions = []
+
+    # try:
+    # open pickle file for countvectorizer
+    vectorizer = utils.open_pickle_file('sentiment_analysis_vectorizer.pkl')
+    
+    # open pickle file for naive bayes model
+    model = utils.open_pickle_file('sentiment_analysis_model.pkl')
+    
+    # predict the sentiment of the review
+    vectorized_text = vectorizer.transform(df)
+    predictions = model.predict(vectorized_text)  
+    predictions  = pd.DataFrame(predictions).replace(sentiment_dict)
+
+    # except Exception as err:
+    #     print(f"ERROR: {err}")
+
+    return predictions
+
+# ---------->>>>>>>>>> END OF SENTIMENT
+
+# ---------->>>>>>>>>> START OF RECOMMENDATION
+
+def get_top_closest_movie_names(movie_name, df, top_n=10):
+    '''
+    This function recommends movie titles that have the closest match to the input
+    '''
+    top_closest_match_name = []
+    try:
+        movie_names = df.drop_duplicates()
+        movie_names = movie_names.reset_index(drop=True)
+
+        with open('./pickle/movie_recommender_vectorizer.pkl', 'rb') as file:
+            vectorizer = pickle.load(file)
+
+        # vectorizer = utils.open_pickle_file('movie_recommender_vectorizer.pkl')
+        movie_title_vectors = vectorizer.transform(movie_names)
+
+        query_vector = vectorizer.transform([movie_name])
+        similarity_scores = cosine_similarity(query_vector, movie_title_vectors)
+
+        top_closest_match_idx = np.argsort(similarity_scores[0])[::-1][:top_n]
+        top_closest_match_name = movie_names.loc[top_closest_match_idx.tolist()].values
+    except Exception as err:
+        print(f"ERROR: {err}")
+
+    return top_closest_match_name
+
+
+def get_movie_recommendation(movie_name, top_n=10):
+    '''
+    This function provides movie recommendations based on various features of the given movie (input)
+    '''
+    recommended_movie_list = []
+    
+
+    # try:
+        
+    with open('./pickle/movie_recommender_nn_indices.pkl', 'rb') as file:
+        vg_indices = pickle.load(file)
+    with open('./pickle/movie_recommender_nn_distances.pkl', 'rb') as file:
+        vg_distances = pickle.load(file)
+    movie_recommender_metadata = pd.read_csv('./dataset/cleaned_data/movie_metadata.csv')
+    # movie_recommender_metadata = utils.open_dataset_file('movie_recommender_metadata.csv')
+    # vg_indices = utils.open_pickle_file('movie_recommender_nn_indices.pkl')
+    # vg_distances = utils.open_pickle_file('movie_recommender_nn_distances.pkl')
+
+    # query movie title
+    movie_idx = movie_recommender_metadata.query("title == @movie_name").index  
+    
+    if movie_idx.empty:
+        # If the movie entered by the user doesn't exist in the records, the program will recommend a new movie similar to the input
+        top_closest_match_name = get_top_closest_movie_names(movie_name=movie_name, df=movie_recommender_metadata['title'], top_n=top_n)
+
+        return pd.DataFrame(top_closest_match_name,columns=["Movie Title"]),0
+        # print(f"'{movie_name}' doesn't exist in the records.\n")
+        # print(f"You may want to try the movies which are the closest match to the input.")
+
+
+        # for movie in top_closest_match_name.tolist():
+            # print(f"- {movie}")
+
+    
     else:
-        # Handle the case where there are not enough values
-        print("Error: Input text should contain at least two values.")
-        return pd.DataFrame()
+        # Place in a separate dataframe the indices and distances, then sort the record by distance in ascending order       
+        vg_combined_dist_idx_df = pd.DataFrame()
+        for idx in movie_idx:
+            vg_dist_idx_df = pd.concat([pd.DataFrame(vg_indices[idx]), pd.DataFrame(vg_distances[idx])], axis=1)
+            vg_combined_dist_idx_df = pd.concat([vg_combined_dist_idx_df, vg_dist_idx_df])
+
+        vg_combined_dist_idx_df = vg_combined_dist_idx_df.set_axis(['Index', 'Distance'], axis=1)
+        # vg_combined_dist_idx_df = vg_combined_dist_idx_df.set_axis(['Index', 'Distance'], axis=1, inplace=False)
+        vg_combined_dist_idx_df = vg_combined_dist_idx_df.reset_index(drop=True)
+        vg_combined_dist_idx_df = vg_combined_dist_idx_df.sort_values(by='Distance', ascending=True)
+
+        movie_list = movie_recommender_metadata.iloc[vg_combined_dist_idx_df['Index']]
+
+        # Remove any duplicate movie names to provide the user with a diverse selection of recommended movies
+        movie_list = movie_list.drop_duplicates(subset=['title'], keep='first')
+        
+        # Remove from the list any game that shares the same name as the input
+        # movie_list = movie_list[movie_list['title'] != movie_name]
+
+        # Get the first 10 games in the list
+        recommended_movie_list = movie_list.head(top_n)
+        recommended_movie_list = recommended_movie_list.drop(columns=['imdb_id'], axis=1)
+        
+        # print(f"Top 10 Recommended Movies for '{movie_name}'")
+        recommended_movie_list = recommended_movie_list.reset_index(drop=True)
+
+    # except Exception as err:
+        # print(f"ERROR: {err}")
+
+    return recommended_movie_list,1
+
+# ---------->>>>>>>>>> END OF RECOMMENDATION
 
 def generate_report(filtered_df):
     # Calculate some hypothetical metrics using the numerical columns
@@ -895,6 +1181,8 @@ def generate_report(filtered_df):
 def main():
     if 'show_match_state' not in st.session_state:
         st.session_state.show_match_state = False
+    if 'show_recommend_state' not in st.session_state:
+        st.session_state.show_recommend_state = False
     if 'show_review_state' not in st.session_state:
         st.session_state.show_review_state = False
     if 'show_movie_state' not in st.session_state:
@@ -949,10 +1237,10 @@ def main():
     if start:
         if st.session_state.start == False:
             # Read the data from the CSV file
-            file_path = './dataset/cleaned_data/merged_file.csv' # Update with your file path ---> REAL
+            # file_path = './dataset/cleaned_data/merged_file.csv' # Update with your file path ---> REAL
             # file_path = './dataset/emb/emb_file.csv' # Update with your file path ---> REAL
             # file_path = './dataset/emb/test.csv' # Update with your file path
-            # file_path = './dataset/cleaned_data/test.csv' # Update with your file path ---> TEST
+            file_path = './dataset/cleaned_data/test.csv' # Update with your file path ---> TEST
             # df_emb = pd.read_csv(file_path)
 
             # Add a Streamlit progress bar
@@ -1024,15 +1312,23 @@ def main():
             st.session_state.show_match_state = False
             st.session_state.show_review_state = True
 
+        def callback4():
+            st.session_state.show_movie_state = False
+            st.session_state.show_match_state = False
+            st.session_state.show_review_state = False
+            st.session_state.show_recommend_state = True
+
 
         # Create a text input box
-        st.subheader("Write a Review - Sentiment")
-        review_text = st.text_area(label= "Enter Review:")
+        st.subheader("Getting Movie Review Sentiment")
+        review_movie_text = st.text_input("Enter Movie Title:")
+        # st.subheader("Write a Review ")
+        review_text = st.text_input("Enter Review:")
         # show_report = st.button("Generate Report")
         show_review = st.button("Submit",on_click=callback3)
 
         # Create a text input box
-        st.subheader("Write a Query ")
+        st.header("Aspect Based Sentiment ")
         query_text = st.text_input("Enter Query:")
 
         st.subheader("Start Date")
@@ -1085,8 +1381,10 @@ def main():
         show_movie = st.button("Sumbit",on_click=callback2)
 
         # A Nightmare on Elm Street
+        st.header("Get a Movie Recommendation")
+        movie_rec = st.text_input("Enter Movie Title: ")
 
-        show_recommendations = st.button("Movie Recommendations")
+        show_recommendations = st.button("Movie Recommendations",on_click=callback4)
 
     # # Display selected options
     # st.write("### Selected Options:")
@@ -1098,6 +1396,20 @@ def main():
     
 
 # ----------->>>>>>
+    if st.session_state.show_recommend_state:
+        # input_review = review_text.strip()
+
+
+        result_df_2_recommend,result_type = get_movie_recommendation(movie_rec.strip())
+        if result_type ==1:
+            movie_info = result_df_2_recommend[result_df_2_recommend['title'] == movie_rec.strip()]
+            movie_list = result_df_2_recommend[result_df_2_recommend['title'] != movie_rec.strip()]
+            st.dataframe(movie_info)
+            st.dataframe(movie_list)
+        else:
+            st.write(f"'{movie_rec}' doesn't exist in the records.")
+            st.write("You may want to try the movies which are the closest match to the input.")
+            st.dataframe(result_df_2_recommend)
 
     # Filter and display matching reviews
     # if show_match:
@@ -1106,14 +1418,31 @@ def main():
         st.session_state.show_match_state = False
 
         input_review = review_text.strip()
-        result_df_2_review = process_input_text(st.session_state.all_chunks ,input_review)
+        result_df_2_review = process_input_text(st.session_state.all_chunks ,review_movie_text,review_text)
+        
         
         # Toy Story/I love this movie!
 
         st.write(f"**Review:** {review_text}")
-        st.dataframe(result_df_2_review.head(1))
+
+        # ----------->>>>>> START OF SENTIMEN
+        
+        # Conduct data preprocessing
+
+        result_df_2_review["Review"] = result_df_2_review["Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=1))
+        # result_df_2_review["Review"] = remove_ner(result_df_2_review["Review"])
+
+        result_df_2_review["Review"] = result_df_2_review["Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=2))
+        result_df_2_review["Review"] = tp.lemmatize_text(result_df_2_review["Review"])
+        # result_df_2_review["Review"] = tp.lemmatize_text(result_df_2_review["Review"], nlp)
+
+
+        # # Generate review sentiment
+        result_df_2_review['sentiment'] = generate_sentiment(result_df_2_review["Review"])
+        st.dataframe(result_df_2_review[["Review","sentiment"]].head(1))
         # st.write(f"**End Date:** {input_end_date}")   
 
+    # ----------->>>>>> END OF SENTIMENT
 
     if st.session_state.show_match_state:
         st.session_state.show_movie_state = False
@@ -1160,36 +1489,39 @@ def main():
 
 # ----------->>>>>>
 
+        if not result_df_2.empty:
         # Display a bar chart based on sentiment counts
-        chart_data = pd.DataFrame(result_df_2['sentiment'].value_counts()).reset_index()
-        chart_data.columns = ['Sentiment', 'Count']
+            chart_data = pd.DataFrame(result_df_2['sentiment'].value_counts()).reset_index()
+            chart_data.columns = ['Sentiment', 'Count']
 
-        st.subheader("Sentiment Distribution")
-        c = alt.Chart(chart_data).mark_bar().encode(
-            x='Sentiment',
-            y='Count',
-            color='Sentiment'
-        ).properties(width=800, height=600)
+            st.subheader("Sentiment Distribution")
+            c = alt.Chart(chart_data).mark_bar().encode(
+                x='Sentiment',
+                y='Count',
+                color='Sentiment'
+            ).properties(width=800, height=600)
 
-        st.altair_chart(c)
+            st.altair_chart(c)
 
-# # # ----
-        # Filter and display top 10 positive reviews
-        result_df_tp_10_pos = filter_top10_pos(result_df_2)
-        st.subheader(f"Top 10 (Positive) Reviews around: {input_review}")
-        st.dataframe(result_df_tp_10_pos)
+    # # # ----
+            # Filter and display top 10 positive reviews
+            result_df_tp_10_pos = filter_top10_pos(result_df_2)
+            st.subheader(f"Top 10 (Positive) Reviews around: {input_review}")
+            st.dataframe(result_df_tp_10_pos)
 
-        
+            
 
-        # Filter and display top 10 negative reviews
-        result_df_tp_10_neg = filter_top10_neg(result_df_2)
-        st.subheader(f"Top 10 (Negative) Reviews around: {input_review}")
-        st.dataframe(result_df_tp_10_neg)
+            # Filter and display top 10 negative reviews
+            result_df_tp_10_neg = filter_top10_neg(result_df_2)
+            st.subheader(f"Top 10 (Negative) Reviews around: {input_review}")
+            st.dataframe(result_df_tp_10_neg)
 
-        # Filter and display top 10 negative reviews
-        result_df_tp_10_neu = filter_top10_neu(result_df_2)
-        st.subheader(f"Top 10 (Neutral) Reviews around: {input_review}")
-        st.dataframe(result_df_tp_10_neu)
+            # Filter and display top 10 negative reviews
+            result_df_tp_10_neu = filter_top10_neu(result_df_2)
+            st.subheader(f"Top 10 (Neutral) Reviews around: {input_review}")
+            st.dataframe(result_df_tp_10_neu)
+        else:
+            st.dataframe(pd.DataFrame())
         
 #         # Add a download button for top 10 negative reviews
 #         csv_export_button_neg = st.download_button(
@@ -1316,6 +1648,9 @@ def main():
         result_df_tp_10movie_neu = filter_top10movie_neu(result_df_movie)
         st.subheader(f"Top 10 (Neutral) Reviews around: {input_review_movie}")
         st.dataframe(result_df_tp_10movie_neu)
+# --------
+# if st.session_state.show_recommend_state:
+#         st.session_state.show_match_state = False
         
 #         # Add a download button for top 10 negative reviews
 #         csv_export_button_neg = st.download_button(
