@@ -18,6 +18,13 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer,util
+from enum import Enum
+
+
+class Sentiment(Enum):
+    Negative = "0"
+    Neutral = "1"
+    Positive = "2"
 
 
 # Language models
@@ -242,11 +249,11 @@ def filter_cast(csv_path, movie_titles):
 
 def filter_top10_reviews(df_result, sentiment_type):
 
-    if sentiment_type == 0:
+    if sentiment_type == Sentiment.Negative.value:
         sentiments = ['negative']
-    elif sentiment_type == 1:
+    elif sentiment_type == Sentiment.Neutral.value:
         sentiments = ['neutral']
-    elif sentiment_type == 2:
+    elif sentiment_type == Sentiment.Positive.value:
         sentiments = ['positive']
 
     # # Check if the Drame is not empty and contains the required columns
@@ -271,11 +278,11 @@ def filter_top10_reviews(df_result, sentiment_type):
 
 def filter_top10movie_reviews(df_result, sentiment_type):
 
-    if sentiment_type == 0:
+    if sentiment_type == Sentiment.Negative.value:
         sentiments = ['negative']
-    elif sentiment_type == 1:
+    elif sentiment_type == Sentiment.Neutral.value:
         sentiments = ['neutral']
-    elif sentiment_type == 2:
+    elif sentiment_type == Sentiment.Positive.value:
         sentiments = ['positive']
 
     if not df_result.empty and 'review_sentiment' in df_result.columns:
@@ -330,29 +337,22 @@ def conduct_text_preprocessing(text, set_n=1):
             # Remove non-grammatical text
             text = tp.remove_email_address(text)
             text = tp.remove_hyperlink(text)
-
             # Replace non-ascii characters as there are Python libraries limiting this feature
             text = tp.replace_nonascii_characters(text)
-
             # Replace emojis with English word/s
             text = emoji_dict.replace_keywords(text)
-
             # Handle contractions
             text = contractions.fix(text)
-
             # Replace slang words
             text = slang_word_dict.replace_keywords(text)
         
         elif set_n == 3:
             # Remove non-alphanumeric characters except for the following
             text = tp.remove_non_alphanumeric_char(text)
-
             # Remove leading and trailing whitespaces
             text = text.strip()
-
             # Replace multiple whitespaces with a single space
             text = tp.replace_whitespace(text)
-
             # Remove stopwords
             text = tp.remove_stopwords(text, list_of_stopwords)
 
@@ -386,7 +386,6 @@ def generate_sentiment(df):
     try:
         # open pickle file for countvectorizer
         vectorizer = utils.open_pickle_file('sentiment_analysis_vectorizer.pkl')
-        
         # open pickle file for naive bayes model
         model = utils.open_pickle_file('sentiment_analysis_model.pkl')
         
@@ -429,7 +428,6 @@ def get_movie_recommendation(movie_name, top_n=10):
     This function provides movie recommendations based on various features of the given movie (input)
     '''
     recommended_movie_list = []
-    
     try:
         movie_recommender_metadata = utils.open_dataset_file('movie_metadata.csv')
         vg_indices = utils.open_pickle_file('movie_recommender_nn_indices.pkl')
@@ -460,9 +458,6 @@ def get_movie_recommendation(movie_name, top_n=10):
             # Remove any duplicate movie names to provide the user with a diverse selection of recommended movies
             movie_list = movie_list.drop_duplicates(subset=['title'], keep='first')
             
-            # Remove from the list any game that shares the same name as the input
-            # movie_list = movie_list[movie_list['title'] != movie_name]
-
             # Get the first 10 games in the list
             recommended_movie_list = movie_list.head(top_n)
             recommended_movie_list = recommended_movie_list.drop(columns=['imdb_id'], axis=1)
@@ -475,77 +470,8 @@ def get_movie_recommendation(movie_name, top_n=10):
     return recommended_movie_list,1
 
 
-def generate_report(filtered_df):
-    # Calculate some hypothetical metrics using the numerical columns
-    total_salary = filtered_df['Salary'].sum()
-    average_work_hours = filtered_df['Work_Hours'].mean()
-
-    # Create a bar chart
-    bar_chart = alt.Chart(filtered_df).mark_bar().encode(
-        x='Department',
-        y='Salary',
-        color='Gender',
-        tooltip=['Department', 'Salary']
-    ).properties(
-        title='Salary by Department (colored by Gender)',
-        width=300
-    )
-
-    # Create a line chart
-    line_chart = alt.Chart(filtered_df).mark_line().encode(
-        x='Department',
-        y='Work_Hours',
-        color='Gender',
-        tooltip=['Department', 'Work_Hours']
-    ).properties(
-        title='Work Hours by Department (colored by Gender)',
-        width=300
-    )
-
-    # Create a bar chart for Age Distribution by Gender
-    age_distribution_chart = alt.Chart(filtered_df).mark_bar().encode(
-        x='Age:Q',
-        y='count()',
-        color='Gender:N'
-    ).properties(
-        title='Age Distribution by Gender',
-        width=300
-    )
-
-    # Create a bar chart for Salary Distribution by Department
-    salary_distribution_chart = alt.Chart(filtered_df).mark_bar().encode(
-        x='Department:N',
-        y='average(Salary):Q',
-        color='Gender:N'
-    ).properties(
-        title='Salary Distribution by Department',
-        width=300
-    )
-
-    with st.expander("Detailed Report", expanded=True):  # Set expanded to True to initially show the report
-        # Display the charts in a single row
-        st.header("Report:")
-        st.write(f"Total Salary: {total_salary}")
-        st.write(f"Average Work Hours: {average_work_hours}")
-        charts_row1, charts_row2 = st.columns(2)
-
-        with charts_row1:
-            st.subheader("Bar Chart:")
-            st.altair_chart(bar_chart)
-
-        with charts_row1:
-            st.subheader("Line Chart:")
-            st.altair_chart(line_chart)
-
-        with charts_row2:
-            st.subheader("Age Distribution by Gender:")
-            st.altair_chart(age_distribution_chart)
-
-        with charts_row2:
-            st.subheader("Salary Distribution by Department:")
-            st.altair_chart(salary_distribution_chart)
-
 def main():
+
     if 'show_match_state' not in st.session_state:
         st.session_state.show_match_state = False
     if 'show_recommend_state' not in st.session_state:
@@ -602,11 +528,8 @@ def main():
         if st.session_state.start == False:
             # Read the data from the CSV file
             file_path = './dataset/movie_reviews_merged.csv' # Update with your file path ---> REAL
-            # file_path = './dataset/emb/emb_file.csv' # Update with your file path ---> REAL
-            # file_path = './dataset/emb/test.csv' # Update with your file path
             # file_path = './dataset/cleaned_data/test.csv' # Update with your file path ---> TEST
-            # df_emb = pd.read_csv(file_path)
-
+            
             # Add a Streamlit progress bar
             progress_bar = st.progress(0)
 
@@ -625,9 +548,6 @@ def main():
             df_emb_iter = pd.read_csv(file_path, iterator=True, chunksize=1000)  # Adjust chunksize as needed
 
             for i, chunk in enumerate(df_emb_iter):
-                # Process each chunk as needed
-                # ...
-
                 # Concatenate the chunk to the final DataFrame
                 all_chunks = pd.concat([all_chunks, chunk])
 
@@ -646,8 +566,8 @@ def main():
     with st.sidebar:
 
         def callback():
-            st.session_state.show_match_state = True
             st.session_state.show_movie_state = False
+            st.session_state.show_match_state = True
             st.session_state.show_review_state = False
             st.session_state.show_recommend_state = False
 
@@ -669,77 +589,56 @@ def main():
             st.session_state.show_review_state = False
             st.session_state.show_recommend_state = True
 
+        ########################################################
+        #  SIDE PANEL: CONTAINING INPUTS
+        ########################################################
+        
+        things = st.session_state['all_chunks']
 
-        # Create a text input box
+        ########## MOVIE REVIEWS ##########
+        title_movie = things['title'].unique().tolist()
+        title_movie.sort()
+        
         st.header("Get Movie Review Sentiment")
-        review_movie_text = st.text_input("Enter Movie Title:")
-        # st.subheader("Write a Review ")
+        review_movie_text = st.selectbox("Select Movie Title", title_movie, key="review_movie_text")
         review_text = st.text_input("Enter Review:")
-        # show_report = st.button("Generate Report")
-        show_review = st.button("Submit",on_click=callback3)
 
-        # Create a text input box
+        show_review = st.button("Find Sentiment", on_click=callback3)
+
+        ########## MOVIE ASPECTED-BASED SENTIMENT ##########
+        sdate = things['movie_year'].unique().tolist()
+        sdate.sort()
+        edate = things['movie_year'].unique().tolist()
+        edate.sort()
+
         st.header("Aspect Based Sentiment ")
         query_text = st.text_input("Enter Query:")
-
-        st.subheader("Start Date")
-        things = st.session_state['all_chunks']
-        sdate = things['movie_year'].unique().tolist()
-
-        
-        # Sort the list in ascending order
-        sdate.sort()
         start_date = st.selectbox("Select Start Date", sdate, key="start_date")
-
-        st.subheader("End Date")
-        things = st.session_state['all_chunks']
-        edate = things['movie_year'].unique().tolist()
-
-        # Sort the list in ascending order
-        edate.sort()
         end_date = st.selectbox("Select End Date", edate, key="end_date")
 
-        
-        # show_report = st.button("Generate Report")
         show_match = st.button("Find Matching Reviews",on_click=callback)
-      
-    
-        # Create a text input box
+
+        #---------------------------------------------------------
         st.subheader("Write a Movie Title")
-        query_movie = st.text_input("Query by Movie Title")
-
-        st.subheader("Start Date")
-        things = st.session_state['all_chunks']
-        sdate_movie = things['movie_year'].unique().tolist()
-
-        
-        # Sort the list in ascending order
-        sdate_movie.sort()
-        start_date_movie = st.selectbox("Select Start Date", sdate_movie, key="start_date_movie")
-
-        st.subheader("End Date")
-        things = st.session_state['all_chunks']
-        edate_movie = things['movie_year'].unique().tolist()
-
-        # Sort the list in ascending order
-        edate_movie.sort()
-        end_date_movie = st.selectbox("Select End Date", edate_movie, key="end_date_movie")
-
+        query_movie = st.selectbox("Query by Movie Title", title_movie, key="query_movie")
+        start_date_movie = st.selectbox("Select Start Date", sdate, key="start_date_movie")
+        end_date_movie = st.selectbox("Select End Date", edate, key="end_date_movie")
 
         show_movie = st.button("Sumbit",on_click=callback2)
 
-        # A Nightmare on Elm Street
+        ########## MOVIE RECOMMENDATION ##########
         st.header("Get a Movie Recommendation")
         movie_rec = st.text_input("Enter Movie Title: ")
+        show_recommendations = st.button("Find Recommendations", on_click=callback4)
 
-        show_recommendations = st.button("Movie Recommendations",on_click=callback4)
 
+    ########################################################
+    #  DISPLAY PANEL: DASHBOARD
+    ########################################################
 
-# ----------->>>>>>
+    ########## MOVIE RECOMMENDATION ##########
     if st.session_state.show_recommend_state:
-
         result_df_2_recommend, result_type = get_movie_recommendation(movie_rec.strip())
-
         if result_type ==1:
             movie_info = result_df_2_recommend[result_df_2_recommend['title'] == movie_rec.strip()]
             movie_list = result_df_2_recommend[result_df_2_recommend['title'] != movie_rec.strip()]
@@ -750,25 +649,22 @@ def main():
             st.write("You may want to try the movies which are the closest match to the input.")
             st.dataframe(result_df_2_recommend)
 
-    # Filter and display matching reviews
+    ########## MOVIE REVIEWS ##########
     if st.session_state.show_review_state:
-        st.session_state.show_movie_state = False
-        st.session_state.show_match_state = False
-        st.session_state.show_recommend_state = False
-
+        
         input_review = review_text.strip()
+        st.write(f"**Review:** {review_text}")
+
         result_df_2_review = process_movie_review(st.session_state.all_chunks, review_movie_text, review_text)
         
-        if not result_df_2_review.empty:
-            st.write(f"**Review:** {review_text}")
+        if not result_df_2_review.empty:    
             st.dataframe(result_df_2_review[["Review","sentiment"]].head(1))
         else:
             st.write(f"'{review_movie_text}' doesn't exist in the records.")
 
-
+    ########## MOVIE ASPECTED-BASED SENTIMENT ##########
     if st.session_state.show_match_state:
-        st.session_state.show_movie_state = False
-        
+
         input_review = query_text.strip()
         result_df_2 = compare_with_existing_embeddings(st.session_state.all_chunks ,input_review,start_date,end_date)
         st.dataframe(result_df_2)
@@ -779,8 +675,6 @@ def main():
             file_name=f'{input_review}_reviews.csv',
             mime='text/csv'
         )
-
-# ----------->>>>>>
 
         if not result_df_2.empty:
         # Display a bar chart based on sentiment counts
@@ -796,27 +690,26 @@ def main():
 
             st.altair_chart(c)
 
-    # # # ----
             # Filter and display top 10 positive reviews
-            result_df_tp_10_pos = filter_top10_reviews(result_df_2, 2)
+            result_df_tp_10_pos = filter_top10_reviews(result_df_2, Sentiment.Positive.value)
             st.subheader(f"Top 10 (Positive) Reviews around: {input_review}")
             st.dataframe(result_df_tp_10_pos)
 
             # Filter and display top 10 negative reviews
-            result_df_tp_10_neg = filter_top10_reviews(result_df_2, 0)
+            result_df_tp_10_neg = filter_top10_reviews(result_df_2, Sentiment.Negative.value)
             st.subheader(f"Top 10 (Negative) Reviews around: {input_review}")
             st.dataframe(result_df_tp_10_neg)
 
             # Filter and display top 10 negative reviews
-            result_df_tp_10_neu = filter_top10_reviews(result_df_2, 1)
+            result_df_tp_10_neu = filter_top10_reviews(result_df_2, Sentiment.Neutral.value)
             st.subheader(f"Top 10 (Neutral) Reviews around: {input_review}")
             st.dataframe(result_df_tp_10_neu)
+
         else:
             st.dataframe(pd.DataFrame())
         
     if st.session_state.show_movie_state:
-        st.session_state.show_match_state = False
-        
+
         input_review_movie = query_movie.strip()
         result_df_movie = filter_by_movie_title(st.session_state.all_chunks ,input_review_movie,start_date_movie,end_date_movie)
         st.dataframe(result_df_movie)
@@ -828,8 +721,6 @@ def main():
             mime='text/csv'
         )
 
-
-# ----------->>>>>>
         # Display a bar chart based on sentiment counts
         chart_data = pd.DataFrame(result_df_movie['review_sentiment'].value_counts()).reset_index()
         chart_data.columns = ['Sentiment', 'Count']
@@ -843,19 +734,18 @@ def main():
 
         st.altair_chart(c)
 
-# # # # ----
         # Filter and display top 10 positive reviews
-        result_df_tp_10movie_pos = filter_top10movie_reviews(result_df_movie, 2)
+        result_df_tp_10movie_pos = filter_top10movie_reviews(result_df_movie, Sentiment.Positive.value)
         st.subheader(f"Top 10 (Positive) Reviews around: {input_review_movie}")
         st.dataframe(result_df_tp_10movie_pos)
 
         # Filter and display top 10 negative reviews
-        result_df_tp_10movie_neg = filter_top10movie_reviews(result_df_movie, 0)
+        result_df_tp_10movie_neg = filter_top10movie_reviews(result_df_movie, Sentiment.Negative.value)
         st.subheader(f"Top 10 (Negative) Reviews around: {input_review_movie}")
         st.dataframe(result_df_tp_10movie_neg)
 
         # Filter and display top 10 negative reviews
-        result_df_tp_10movie_neu = filter_top10movie_reviews(result_df_movie, 1)
+        result_df_tp_10movie_neu = filter_top10movie_reviews(result_df_movie, Sentiment.Neutral.value)
         st.subheader(f"Top 10 (Neutral) Reviews around: {input_review_movie}")
         st.dataframe(result_df_tp_10movie_neu)
 
