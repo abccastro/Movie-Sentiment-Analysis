@@ -20,15 +20,16 @@ from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer,util
 
 
-def initialization():
-    # Language models
-    nltk.download('stopwords')
-    list_of_stopwords = set(stopwords.words('english'))
+# Language models
+nltk.download('stopwords')
+list_of_stopwords = set(stopwords.words('english'))
 
-    # initializer dictionaries for data preprocessing
-    emoji_dict = tp.get_emojis()
-    slang_word_dict = tp.get_slang_words(webscraped=False)
+# initializer dictionaries for data preprocessing
+emoji_dict = tp.get_emojis()
+slang_word_dict = tp.get_slang_words(webscraped=False)
 
+
+def download_lang_model():
     try:
         # Attempt to load the model
         nlp = spacy.load("en_core_web_sm")
@@ -973,5 +974,4 @@ def main():
 
 
 if __name__ == "__main__":
-    initialization()
     main()
