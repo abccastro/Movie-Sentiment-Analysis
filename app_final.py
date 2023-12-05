@@ -23,19 +23,11 @@ from sentence_transformers import SentenceTransformer,util
 # Language models
 nltk.download('stopwords')
 list_of_stopwords = set(stopwords.words('english'))
+nlp = spacy.load("en_core_web_sm")
 
 # initializer dictionaries for data preprocessing
 emoji_dict = tp.get_emojis()
 slang_word_dict = tp.get_slang_words(webscraped=False)
-
-
-def download_lang_model():
-    try:
-        # Attempt to load the model
-        nlp = spacy.load("en_core_web_sm")
-    except OSError:
-        spacy.cli.download("en_core_web_sm")
-        nlp = spacy.load("en_core_web_sm")
 
 
 def compare_with_existing_embeddings(all_chunks, input_val, sdate="", edate=""):
@@ -76,9 +68,6 @@ def compare_with_existing_embeddings(all_chunks, input_val, sdate="", edate=""):
     # Set a threshold for similarity, e.g., 0.4
     threshold = 0.4
 
-    # Add a Streamlit progress bar
-    # progress_bar = st.progress(0)
-
     # Iterate through the reviews
     total_reviews = len(df)
     for i, row in df.iterrows():
@@ -103,12 +92,6 @@ def compare_with_existing_embeddings(all_chunks, input_val, sdate="", edate=""):
             }
             matching_reviews.append(metadata)
 
-        # Update the progress bar
-        # progress_bar.progress((i + 1) / total_reviews)
-
-    # Close the progress bar once processing is complete
-    # progress_bar.empty()
-
     # Create a DataFrame with the matching reviews and sort it
     df_result = pd.DataFrame(matching_reviews)
     
@@ -121,25 +104,8 @@ def compare_with_existing_embeddings(all_chunks, input_val, sdate="", edate=""):
 
 
 def filter_by_movie_title(df, input_title,sdate="",edate=""):
-# Check if the 'movie' column exists in the DataFrame
-    # if 'title' not in df.columns:
-    #     # raise ValueError("The 'movie' column does not exist in the DataFrame.")
-    #     return pd.DataFrame()
-    # # Lowercase and strip whitespace from the 'title' column and input title
-    # df['movie_title_lower'] = df['title'].str.lower().str.strip()
-    # input_title_lower = input_title.lower().strip()
-
-    # # Filter the DataFrame based on the lowercase and stripped input movie title
-    # filtered_df = df[df['movie_title_lower'] == input_title_lower]
-
-    # # Drop the temporary lowercase column
-    # filtered_df = filtered_df.drop(columns=['movie_title_lower'])
-
-    # return filtered_df
-
     #  Check if the 'title' column exists in the DataFrame
     if 'title' not in df.columns:
-        # raise ValueError("The 'title' column does not exist in the DataFrame.")
         return pd.DataFrame()
 
     # Lowercase and strip whitespace from the 'title' column and input title
@@ -169,14 +135,6 @@ def filter_by_movie_title(df, input_title,sdate="",edate=""):
     filtered_df = filtered_df.drop(columns=['movie_title_lower'])
 
     return filtered_df
-
-
-###-------> SHOW ALL ROWS
-def read_all(existing_csv_path):
-    # Load the existing DataFrame with embeddings
-    df = pd.read_csv(existing_csv_path)
-    return df
-
 
 
 ###-------> FILTER CSV WITH MOVIE TITLES
@@ -304,8 +262,6 @@ def filter_top10_neg(df_result):
     positive_sentiments = ['negative', 'strongly negative']
     
     # # Check if the DataFrame is not empty and contains the required columns
-    # if not df_result.empty and 'sentiment' in df_result.columns and 'cosine_similarity' in df_result.columns:
-    #     df_result = df_result[df_result['sentiment'].isin(positive_sentiments)]
     if not df_result.empty and 'sentiment' in df_result.columns and 'cosine_similarity' in df_result.columns:
     # Lowercase the 'sentiment' column and create a temporary lowercase column
         df_result['sentiment_lower'] = df_result['sentiment'].str.lower()
@@ -360,10 +316,7 @@ def filter_top10movie_pos(df_result):
 def filter_top10movie_neg(df_result):
     # Filter only "Positive" and "Strongly Positive" sentiments
     positive_sentiments = ['negative', 'Strongly Negative']
-    
-    # # Check if the DataFrame is not empty and contains the required columns
-    # if not df_result.empty and 'sentiment' in df_result.columns:
-    #     df_result = df_result[df_result['sentiment'].isin(positive_sentiments)]
+
     if not df_result.empty and 'review_sentiment' in df_result.columns:
     # Lowercase the 'sentiment' column and create a temporary lowercase column
         df_result['sentiment_lower'] = df_result['review_sentiment'].str.lower()
@@ -421,9 +374,8 @@ def process_movie_review(df, input_movie_text, review_text):
         new_df['sentiment'] = generate_sentiment(new_df["Cleaned_Review"])
         
     return new_df
-        
-# ---------->>>>>>>>>> START
-
+       
+       
 def conduct_text_preprocessing(text, set_n=1):
     '''
     This function contains processes for data cleaning
@@ -503,9 +455,6 @@ def generate_sentiment(df):
 
     return predictions
 
-# ---------->>>>>>>>>> END OF SENTIMENT
-
-# ---------->>>>>>>>>> START OF RECOMMENDATION
 
 def get_top_closest_movie_names(movie_name, df, top_n=10):
     '''
@@ -580,7 +529,6 @@ def get_movie_recommendation(movie_name, top_n=10):
 
     return recommended_movie_list,1
 
-# ---------->>>>>>>>>> END OF RECOMMENDATION
 
 def generate_report(filtered_df):
     # Calculate some hypothetical metrics using the numerical columns
@@ -670,9 +618,6 @@ def main():
     if "start" not in st.session_state:
         st.session_state["start"] = False
 
-    # if "id_btn" not in st.session_state:
-    #         st.session_state['id_btn'] = False
-    # Add a dark theme and background effects to the page
     st.markdown(
         """
         <style>
@@ -940,7 +885,6 @@ def main():
 
 
 # ----------->>>>>>
-
         # Display a bar chart based on sentiment counts
         chart_data = pd.DataFrame(result_df_movie['review_sentiment'].value_counts()).reset_index()
         chart_data.columns = ['Sentiment', 'Count']
@@ -959,8 +903,6 @@ def main():
         result_df_tp_10movie_pos = filter_top10movie_pos(result_df_movie)
         st.subheader(f"Top 10 (Positive) Reviews around: {input_review_movie}")
         st.dataframe(result_df_tp_10movie_pos)
-
-        
 
         # Filter and display top 10 negative reviews
         result_df_tp_10movie_neg = filter_top10movie_neg(result_df_movie)
