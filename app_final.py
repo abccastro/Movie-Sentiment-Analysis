@@ -921,7 +921,7 @@ def process_input_text(df,input_movie_text,review_text):
     
 # ---------->>>>>>>>>> START
 
-# nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_sm")
 list_of_stopwords = set(stopwords.words('english'))
 
 # initializer dictionaries for data preprocessing
@@ -971,17 +971,17 @@ def conduct_text_preprocessing(text, set_n=1):
     return text
 
 
-# def remove_ner(df):
-#     '''
-#     This function removes Named Entity Recognition (NER)s
-#     '''
-#     # Dummy dataframe for extracted NERs
-#     column_names = ['PERSON', 'WORK_OF_ART', 'LOCATION', 'DATE_TIME', 'ORGANIZATION', 'PRODUCT', 'EVENT', 'LANGUAGE']
-#     movie_name_entities_df = pd.DataFrame(columns=column_names)
+def remove_ner(df):
+    '''
+    This function removes Named Entity Recognition (NER)s
+    '''
+    # Dummy dataframe for extracted NERs
+    column_names = ['PERSON', 'WORK_OF_ART', 'LOCATION', 'DATE_TIME', 'ORGANIZATION', 'PRODUCT', 'EVENT', 'LANGUAGE']
+    movie_name_entities_df = pd.DataFrame(columns=column_names)
 
-#     # Extract and remove name entities
-#     df['Review'], movie_name_entities_df = tp.extract_name_entity(df, nlp, movie_name_entities_df)
-#     return df
+    # Extract and remove name entities
+    df['Review'], movie_name_entities_df = tp.extract_name_entity(df, nlp, movie_name_entities_df)
+    return df
 
 
 def generate_sentiment(df):
@@ -1021,10 +1021,7 @@ def get_top_closest_movie_names(movie_name, df, top_n=10):
         movie_names = df.drop_duplicates()
         movie_names = movie_names.reset_index(drop=True)
 
-        with open('./pickle/movie_recommender_vectorizer.pkl', 'rb') as file:
-            vectorizer = pickle.load(file)
-
-        # vectorizer = utils.open_pickle_file('movie_recommender_vectorizer.pkl')
+        vectorizer = utils.open_pickle_file('movie_recommender_vectorizer.pkl')
         movie_title_vectors = vectorizer.transform(movie_names)
 
         query_vector = vectorizer.transform([movie_name])
@@ -1044,17 +1041,9 @@ def get_movie_recommendation(movie_name, top_n=10):
     '''
     recommended_movie_list = []
     
-
-    # try:
-        
-    with open('./pickle/movie_recommender_nn_indices.pkl', 'rb') as file:
-        vg_indices = pickle.load(file)
-    with open('./pickle/movie_recommender_nn_distances.pkl', 'rb') as file:
-        vg_distances = pickle.load(file)
-    movie_recommender_metadata = pd.read_csv('./dataset/cleaned_data/movie_metadata.csv')
-    # movie_recommender_metadata = utils.open_dataset_file('movie_recommender_metadata.csv')
-    # vg_indices = utils.open_pickle_file('movie_recommender_nn_indices.pkl')
-    # vg_distances = utils.open_pickle_file('movie_recommender_nn_distances.pkl')
+    movie_recommender_metadata = utils.open_dataset_file('movie_metadata.csv')
+    vg_indices = utils.open_pickle_file('movie_recommender_nn_indices.pkl')
+    vg_distances = utils.open_pickle_file('movie_recommender_nn_distances.pkl')
 
     # query movie title
     movie_idx = movie_recommender_metadata.query("title == @movie_name").index  
@@ -1235,10 +1224,10 @@ def main():
     if start:
         if st.session_state.start == False:
             # Read the data from the CSV file
-            # file_path = './dataset/cleaned_data/merged_file.csv' # Update with your file path ---> REAL
+            file_path = './dataset/movie_reviews_merged.csv' # Update with your file path ---> REAL
             # file_path = './dataset/emb/emb_file.csv' # Update with your file path ---> REAL
             # file_path = './dataset/emb/test.csv' # Update with your file path
-            file_path = './dataset/cleaned_data/test.csv' # Update with your file path ---> TEST
+            # file_path = './dataset/cleaned_data/test.csv' # Update with your file path ---> TEST
             # df_emb = pd.read_csv(file_path)
 
             # Add a Streamlit progress bar
@@ -1428,11 +1417,11 @@ def main():
         # Conduct data preprocessing
 
         result_df_2_review["Review"] = result_df_2_review["Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=1))
-        # result_df_2_review["Review"] = remove_ner(result_df_2_review["Review"])
+        result_df_2_review["Review"] = remove_ner(result_df_2_review["Review"])
 
         result_df_2_review["Review"] = result_df_2_review["Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=2))
-        result_df_2_review["Review"] = tp.lemmatize_text(result_df_2_review["Review"])
-        # result_df_2_review["Review"] = tp.lemmatize_text(result_df_2_review["Review"], nlp)
+        # result_df_2_review["Review"] = tp.lemmatize_text(result_df_2_review["Review"])
+        result_df_2_review["Review"] = tp.lemmatize_text(result_df_2_review["Review"], nlp)
 
 
         # # Generate review sentiment
