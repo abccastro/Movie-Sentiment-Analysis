@@ -240,34 +240,22 @@ def filter_cast(csv_path, movie_titles):
     return result_df
 
 
-def filter_top10_pos(df_result):
-    # Filter only "Positive" and "Strongly Positive" sentiments
-    positive_sentiments = ['positive', 'strongly positive']
-    
-    # Check if the DataFrame is not empty and contains the required columns
+def filter_top10_reviews(df_result, sentiment_type):
+
+    if sentiment_type == 0:
+        sentiments = ['negative']
+    elif sentiment_type == 1:
+        sentiments = ['neutral']
+    elif sentiment_type == 2:
+        sentiments = ['positive']
+
+    # # Check if the Drame is not empty and contains the required columns
     if not df_result.empty and 'sentiment' in df_result.columns and 'cosine_similarity' in df_result.columns:
-        df_result = df_result[df_result['sentiment'].isin(positive_sentiments)]
-
-        # Sort the DataFrame by Cosine Similarity in descending order
-        df_result = df_result.sort_values(by='cosine_similarity', ascending=False).head(10)
-
-        return df_result
-    else:
-        # Handle the case where the DataFrame is empty or missing required columns
-        return pd.DataFrame()
-
-
-def filter_top10_neg(df_result):
-    # Filter only "Positive" and "Strongly Positive" sentiments
-    positive_sentiments = ['negative', 'strongly negative']
-    
-    # # Check if the DataFrame is not empty and contains the required columns
-    if not df_result.empty and 'sentiment' in df_result.columns and 'cosine_similarity' in df_result.columns:
-    # Lowercase the 'sentiment' column and create a temporary lowercase column
+    # Lowercase theataF 'sentiment' column and create a temporary lowercase column
         df_result['sentiment_lower'] = df_result['sentiment'].str.lower()
 
         # Filter the DataFrame based on the lowercase 'sentiment' column
-        df_result = df_result[df_result['sentiment_lower'].isin(positive_sentiments)]
+        df_result = df_result[df_result['sentiment_lower'].isin(sentiments)]
 
         # Drop the temporary lowercase column
         df_result = df_result.drop(columns=['sentiment_lower'])
@@ -280,68 +268,25 @@ def filter_top10_neg(df_result):
         # Handle the case where the DataFrame is empty or missing required columns
         return pd.DataFrame()
 
-def filter_top10_neu(df_result):
-    # Filter only "Positive" and "Strongly Positive" sentiments
-    positive_sentiments = ['neutral']
-    
-    # Check if the DataFrame is not empty and contains the required columns
-    if not df_result.empty and 'sentiment' in df_result.columns and 'cosine_similarity' in df_result.columns:
-        df_result = df_result[df_result['sentiment'].isin(positive_sentiments)]
 
-        # Sort the DataFrame by Cosine Similarity in descending order
-        df_result = df_result.sort_values(by='cosine_similarity', ascending=False).head(10)
+def filter_top10movie_reviews(df_result, sentiment_type):
 
-        return df_result
-    else:
-        # Handle the case where the DataFrame is empty or missing required columns
-        return pd.DataFrame()
-
-def filter_top10movie_pos(df_result):
-    # Filter only "Positive" and "Strongly Positive" sentiments
-    positive_sentiments = ['positive', 'strongly positive']
-    
-    # Check if the DataFrame is not empty and contains the required columns
-    if not df_result.empty and 'review_sentiment' in df_result.columns:
-        df_result = df_result[df_result['review_sentiment'].isin(positive_sentiments)]
-
-        # Sort the DataFrame by Cosine Similarity in descending order
-        df_result = df_result.head(10)
-
-        return df_result
-    else:
-        # Handle the case where the DataFrame is empty or missing required columns
-        return pd.DataFrame()
-
-
-def filter_top10movie_neg(df_result):
-    # Filter only "Positive" and "Strongly Positive" sentiments
-    positive_sentiments = ['negative', 'Strongly Negative']
+    if sentiment_type == 0:
+        sentiments = ['negative']
+    elif sentiment_type == 1:
+        sentiments = ['neutral']
+    elif sentiment_type == 2:
+        sentiments = ['positive']
 
     if not df_result.empty and 'review_sentiment' in df_result.columns:
     # Lowercase the 'sentiment' column and create a temporary lowercase column
         df_result['sentiment_lower'] = df_result['review_sentiment'].str.lower()
 
         # Filter the DataFrame based on the lowercase 'sentiment' column
-        df_result = df_result[df_result['sentiment_lower'].isin(positive_sentiments)]
+        df_result = df_result[df_result['sentiment_lower'].isin(sentiments)]
 
         # Drop the temporary lowercase column
         df_result = df_result.drop(columns=['sentiment_lower'])
-
-        # Sort the DataFrame by Cosine Similarity in descending order
-        df_result = df_result.head(10)
-
-        return df_result
-    else:
-        # Handle the case where the DataFrame is empty or missing required columns
-        return pd.DataFrame()
-
-def filter_top10movie_neu(df_result):
-    # Filter only "Positive" and "Strongly Positive" sentiments
-    positive_sentiments = ['neutral']
-    
-    # Check if the DataFrame is not empty and contains the required columns
-    if not df_result.empty and 'review_sentiment' in df_result.columns:
-        df_result = df_result[df_result['review_sentiment'].isin(positive_sentiments)]
 
         # Sort the DataFrame by Cosine Similarity in descending order
         df_result = df_result.head(10)
@@ -853,17 +798,17 @@ def main():
 
     # # # ----
             # Filter and display top 10 positive reviews
-            result_df_tp_10_pos = filter_top10_pos(result_df_2)
+            result_df_tp_10_pos = filter_top10_reviews(result_df_2, 2)
             st.subheader(f"Top 10 (Positive) Reviews around: {input_review}")
             st.dataframe(result_df_tp_10_pos)
 
             # Filter and display top 10 negative reviews
-            result_df_tp_10_neg = filter_top10_neg(result_df_2)
+            result_df_tp_10_neg = filter_top10_reviews(result_df_2, 0)
             st.subheader(f"Top 10 (Negative) Reviews around: {input_review}")
             st.dataframe(result_df_tp_10_neg)
 
             # Filter and display top 10 negative reviews
-            result_df_tp_10_neu = filter_top10_neu(result_df_2)
+            result_df_tp_10_neu = filter_top10_reviews(result_df_2, 1)
             st.subheader(f"Top 10 (Neutral) Reviews around: {input_review}")
             st.dataframe(result_df_tp_10_neu)
         else:
@@ -900,17 +845,17 @@ def main():
 
 # # # # ----
         # Filter and display top 10 positive reviews
-        result_df_tp_10movie_pos = filter_top10movie_pos(result_df_movie)
+        result_df_tp_10movie_pos = filter_top10movie_reviews(result_df_movie, 2)
         st.subheader(f"Top 10 (Positive) Reviews around: {input_review_movie}")
         st.dataframe(result_df_tp_10movie_pos)
 
         # Filter and display top 10 negative reviews
-        result_df_tp_10movie_neg = filter_top10movie_neg(result_df_movie)
+        result_df_tp_10movie_neg = filter_top10movie_reviews(result_df_movie, 0)
         st.subheader(f"Top 10 (Negative) Reviews around: {input_review_movie}")
         st.dataframe(result_df_tp_10movie_neg)
 
         # Filter and display top 10 negative reviews
-        result_df_tp_10movie_neu = filter_top10movie_neu(result_df_movie)
+        result_df_tp_10movie_neu = filter_top10movie_reviews(result_df_movie, 1)
         st.subheader(f"Top 10 (Neutral) Reviews around: {input_review_movie}")
         st.dataframe(result_df_tp_10movie_neu)
 
