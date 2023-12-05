@@ -19,14 +19,22 @@ from sklearn.naive_bayes import MultinomialNB
 from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer,util
 
-# Language models
-nltk.download('stopwords')
-nlp = spacy.load("en_core_web_sm")
-list_of_stopwords = set(stopwords.words('english'))
 
-# initializer dictionaries for data preprocessing
-emoji_dict = tp.get_emojis()
-slang_word_dict = tp.get_slang_words(webscraped=False)
+def initialization():
+    # Language models
+    nltk.download('stopwords')
+    list_of_stopwords = set(stopwords.words('english'))
+
+    # initializer dictionaries for data preprocessing
+    emoji_dict = tp.get_emojis()
+    slang_word_dict = tp.get_slang_words(webscraped=False)
+
+    try:
+        # Attempt to load the model
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        spacy.cli.download("en_core_web_sm")
+        nlp = spacy.load("en_core_web_sm")
 
 
 def compare_with_existing_embeddings(all_chunks, input_val, sdate="", edate=""):
@@ -400,7 +408,7 @@ def process_movie_review(df, input_movie_text, review_text):
         # Create a new DataFrame to store the modified data
         new_df = filtered_df.head(1)
         new_df['Review'] = review_text
-        
+
         # Conduct data preprocessing
         new_df["Cleaned_Review"] = new_df["Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=1))
         new_df["Cleaned_Review"] = remove_ner(new_df["Cleaned_Review"])
@@ -965,4 +973,5 @@ def main():
 
 
 if __name__ == "__main__":
+    initialization()
     main()
