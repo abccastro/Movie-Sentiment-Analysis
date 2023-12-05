@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import altair as alt
@@ -9,19 +8,17 @@ import torch
 import text_preprocessing as tp
 import utils
 import contractions
-# import os
-# import spacy
+import spacy
 import pickle
-# import os
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from nltk.corpus import stopwords
-
 from sentence_transformers import SentenceTransformer,util
+
+nltk.download('stopwords')
 
 # def filter_reviews(input_val):
 #     # Load the Sentence Transformer model
