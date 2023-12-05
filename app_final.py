@@ -399,9 +399,8 @@ def process_movie_review(df, input_movie_text, review_text):
     if len(filtered_df) > 1:
         # Create a new DataFrame to store the modified data
         new_df = filtered_df.head(1)
-
         new_df['Review'] = review_text
-        print(f"****************{new_df}******************")
+        
         # Conduct data preprocessing
         new_df["Cleaned_Review"] = new_df["Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=1))
         new_df["Cleaned_Review"] = remove_ner(new_df["Cleaned_Review"])

@@ -1,5 +1,5 @@
 # Use Git LFS for specific file types
-dataset/movies_metadata.csv filter=lfs diff=lfs merge=lfs -text
+dataset/movie_metadata.csv filter=lfs diff=lfs merge=lfs -text
 dataset/movies_reviews.csv filter=lfs diff=lfs merge=lfs -text
 dataset/movie_reviews_merged.csv filter=lfs diff=lfs merge=lfs -text
 dataset/merged_file.csv filter=lfs diff=lfs merge=lfs -text
