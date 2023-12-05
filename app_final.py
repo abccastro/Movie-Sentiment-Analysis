@@ -90,7 +90,6 @@ def compare_with_existing_embeddings(all_chunks, input_val, sdate="", edate=""):
         # Check if similarity is above the threshold
         if cos_sim > threshold:
             metadata = {
-                'Index': i,
                 'Review': review_text,
                 'cosine_similarity': cos_sim,
                 'sentiment': row['review_sentiment'],
@@ -122,21 +121,21 @@ def filter_by_movie_title(df, input_title,sdate="",edate=""):
     # Filter the DataFrame based on the lowercase and stripped input movie title
     filtered_df = df[df['movie_title_lower'] == input_title_lower]
 
-    # Check if both start date and end date are provided
-    if sdate and edate:
-        # Convert dates to numbers (assuming they are strings)
-        sdate = int(sdate)
-        edate = int(edate)
+    # # Check if both start date and end date are provided
+    # if sdate and edate:
+    #     # Convert dates to numbers (assuming they are strings)
+    #     sdate = int(sdate)
+    #     edate = int(edate)
 
-        # Ensure start date is not higher than end date
-        if sdate > edate:
-            st.warning("Start date should not be higher than end date.")
-            return pd.DataFrame()
+    #     # Ensure start date is not higher than end date
+    #     if sdate > edate:
+    #         st.warning("Start date should not be higher than end date.")
+    #         return pd.DataFrame()
         
-        filtered_df['release_year'] = pd.to_numeric(filtered_df['release_year'], errors='coerce')
+    #     filtered_df['release_year'] = pd.to_numeric(filtered_df['release_year'], errors='coerce')
 
-        # Filter the DataFrame based on the date range
-        filtered_df = filtered_df[(filtered_df['release_year'] >= sdate) & (filtered_df['release_year'] <= edate)]
+    #     # Filter the DataFrame based on the date range
+    #     filtered_df = filtered_df[(filtered_df['release_year'] >= sdate) & (filtered_df['release_year'] <= edate)]
 
     # Drop the temporary lowercase column
     filtered_df = filtered_df.drop(columns=['movie_title_lower'])
@@ -439,7 +438,7 @@ def get_movie_recommendation(movie_name, top_n=10):
         if movie_idx.empty:
             # If the movie entered by the user doesn't exist in the records, the program will recommend a new movie similar to the input
             top_closest_match_name = get_top_closest_movie_names(movie_name=movie_name, df=movie_recommender_metadata['title'], top_n=top_n)
-            return pd.DataFrame(top_closest_match_name,columns=["Movie Title"]),0
+            return pd.DataFrame(top_closest_match_name, columns=["Movie Title"]),0
         
         else:
             # Place in a separate dataframe the indices and distances, then sort the record by distance in ascending order       
@@ -558,7 +557,7 @@ def main():
             st.balloons()  # Optional: Display celebratory balloons to signal completion
             progress_bar.empty()
             st.session_state.all_chunks = all_chunks
-            st.dataframe(all_chunks.head())
+            st.dataframe(all_chunks.head(), hide_index=True)
             st.session_state.start = True
 
 
@@ -595,7 +594,7 @@ def main():
         
         things = st.session_state['all_chunks']
 
-        ########## MOVIE REVIEWS ##########
+        ########## MOVIE REVIEW SENTIMENT ##########
         title_movie = things['title'].unique().tolist()
         title_movie.sort()
         
@@ -611,23 +610,23 @@ def main():
         edate = things['movie_year'].unique().tolist()
         edate.sort()
 
-        st.header("Aspect Based Sentiment ")
+        st.header("Movie Aspect-Based Sentiment")
         query_text = st.text_input("Enter Query:")
         start_date = st.selectbox("Select Start Date", sdate, key="start_date")
         end_date = st.selectbox("Select End Date", edate, key="end_date")
 
-        show_match = st.button("Find Matching Reviews",on_click=callback)
+        show_match = st.button("Find Reviews", on_click=callback, key="show_match")
 
-        #---------------------------------------------------------
-        st.subheader("Write a Movie Title")
-        query_movie = st.selectbox("Query by Movie Title", title_movie, key="query_movie")
-        start_date_movie = st.selectbox("Select Start Date", sdate, key="start_date_movie")
-        end_date_movie = st.selectbox("Select End Date", edate, key="end_date_movie")
+        ########## MOVIE REVIEWS ##########
+        st.header("Get Movie Reviews")
+        query_movie = st.selectbox("Select Movie Title", title_movie, key="query_movie")
+        # start_date_movie = st.selectbox("Select Start Date", sdate, key="start_date_movie")
+        # end_date_movie = st.selectbox("Select End Date", edate, key="end_date_movie")
 
-        show_movie = st.button("Sumbit",on_click=callback2)
+        show_movie = st.button("Find Reviews", on_click=callback2, key="show_movie")
 
         ########## MOVIE RECOMMENDATION ##########
-        st.header("Get a Movie Recommendation")
+        st.header("Get Movie Recommendation")
         movie_rec = st.text_input("Enter Movie Title: ")
         show_recommendations = st.button("Find Recommendations", on_click=callback4)
 
@@ -642,14 +641,18 @@ def main():
         if result_type ==1:
             movie_info = result_df_2_recommend[result_df_2_recommend['title'] == movie_rec.strip()]
             movie_list = result_df_2_recommend[result_df_2_recommend['title'] != movie_rec.strip()]
-            st.dataframe(movie_info)
-            st.dataframe(movie_list)
-        else:
-            st.write(f"'{movie_rec}' doesn't exist in the records.")
-            st.write("You may want to try the movies which are the closest match to the input.")
-            st.dataframe(result_df_2_recommend)
 
-    ########## MOVIE REVIEWS ##########
+            st.subheader(f"Movie Information")
+            st.dataframe(movie_info, hide_index=True)
+
+            st.subheader(f"Top 10 Recommended Movies for '{movie_info.iloc[0]['title']}'")
+            st.dataframe(movie_list, hide_index=True)
+        else:
+            st.write(f"The movie'{movie_rec}' doesn't exist in the records.")
+            st.write("You may want to try the movies which are the closest match to the input.")
+            st.dataframe(result_df_2_recommend, hide_index=True)
+
+    ########## MOVIE REVIEW SENTIMENT ##########
     if st.session_state.show_review_state:
         
         input_review = review_text.strip()
@@ -658,16 +661,16 @@ def main():
         result_df_2_review = process_movie_review(st.session_state.all_chunks, review_movie_text, review_text)
         
         if not result_df_2_review.empty:    
-            st.dataframe(result_df_2_review[["Review","sentiment"]].head(1))
+            st.dataframe(result_df_2_review[["Review","sentiment"]].head(1), hide_index=True)
         else:
-            st.write(f"'{review_movie_text}' doesn't exist in the records.")
+            st.write(f"The movie '{review_movie_text}' doesn't exist in the records.")
 
     ########## MOVIE ASPECTED-BASED SENTIMENT ##########
     if st.session_state.show_match_state:
 
         input_review = query_text.strip()
         result_df_2 = compare_with_existing_embeddings(st.session_state.all_chunks ,input_review,start_date,end_date)
-        st.dataframe(result_df_2)
+        st.dataframe(result_df_2, hide_index=True)
         # Add a download button for top 10 positive reviews
         csv_export_button_pos = st.download_button(
             label=f"All reviews relating to {input_review}",
@@ -708,11 +711,13 @@ def main():
         else:
             st.dataframe(pd.DataFrame())
         
+    ########## MOVIE REVIEWS ##########
     if st.session_state.show_movie_state:
 
         input_review_movie = query_movie.strip()
-        result_df_movie = filter_by_movie_title(st.session_state.all_chunks ,input_review_movie,start_date_movie,end_date_movie)
-        st.dataframe(result_df_movie)
+        result_df_movie = filter_by_movie_title(st.session_state.all_chunks, input_review_movie)
+        st.subheader(f"Movie Reviews on '{input_review_movie}'")
+        st.dataframe(result_df_movie[['Review', 'date', 'review_sentiment']], hide_index=True)
         # Add a download button for top 10 positive reviews
         csv_export_button_pos = st.download_button(
             label=f"All reviews relating to {input_review_movie}",
@@ -736,18 +741,18 @@ def main():
 
         # Filter and display top 10 positive reviews
         result_df_tp_10movie_pos = filter_top10movie_reviews(result_df_movie, Sentiment.Positive.value)
-        st.subheader(f"Top 10 (Positive) Reviews around: {input_review_movie}")
-        st.dataframe(result_df_tp_10movie_pos)
+        st.subheader(f"Top 10 (Positive) Reviews")
+        st.dataframe(result_df_tp_10movie_pos[['Review', 'date']], hide_index=True)
 
         # Filter and display top 10 negative reviews
         result_df_tp_10movie_neg = filter_top10movie_reviews(result_df_movie, Sentiment.Negative.value)
-        st.subheader(f"Top 10 (Negative) Reviews around: {input_review_movie}")
-        st.dataframe(result_df_tp_10movie_neg)
+        st.subheader(f"Top 10 (Negative) Reviews")
+        st.dataframe(result_df_tp_10movie_neg[['Review', 'date']], hide_index=True)
 
         # Filter and display top 10 negative reviews
         result_df_tp_10movie_neu = filter_top10movie_reviews(result_df_movie, Sentiment.Neutral.value)
-        st.subheader(f"Top 10 (Neutral) Reviews around: {input_review_movie}")
-        st.dataframe(result_df_tp_10movie_neu)
+        st.subheader(f"Top 10 (Neutral) Reviews")
+        st.dataframe(result_df_tp_10movie_neu[['Review', 'date']], hide_index=True)
 
 
 if __name__ == "__main__":
