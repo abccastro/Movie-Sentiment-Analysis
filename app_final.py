@@ -8,7 +8,7 @@ import torch
 import text_preprocessing as tp
 import utils
 import contractions
-import spacy
+# import spacy
 import nltk
 import pickle
 
@@ -30,16 +30,11 @@ class Sentiment(Enum):
 # Language models
 nltk.download('stopwords')
 list_of_stopwords = set(stopwords.words('english'))
-nlp = spacy.load("en_core_web_sm")
+# nlp = spacy.load("en_core_web_sm")
 
 # initializer dictionaries for data preprocessing
 emoji_dict = tp.get_emojis()
 slang_word_dict = tp.get_slang_words(webscraped=False)
-
-
-@st.cache_resource
-def download_en_core_web_sm():
-    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
 
 
 def compare_with_existing_embeddings(all_chunks, input_val, sdate="", edate=""):
@@ -175,10 +170,10 @@ def process_movie_review(df, input_movie_text, review_text):
 
         # Conduct data preprocessing
         new_df["Cleaned_Review"] = new_df["Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=1))
-        new_df["Cleaned_Review"] = remove_ner(new_df["Cleaned_Review"])
+        # new_df["Cleaned_Review"] = remove_ner(new_df["Cleaned_Review"])
         new_df["Cleaned_Review"] = new_df["Cleaned_Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=2))
-        # result_df_2_review["Review"] = tp.lemmatize_text(result_df_2_review["Review"])
-        new_df["Cleaned_Review"] = tp.lemmatize_text(new_df["Cleaned_Review"], nlp)
+        result_df_2_review["Review"] = tp.lemmatize_text(result_df_2_review["Review"])
+        # new_df["Cleaned_Review"] = tp.lemmatize_text(new_df["Cleaned_Review"], nlp)
 
         # Generate review sentiment
         new_df['sentiment'] = generate_sentiment(new_df["Cleaned_Review"])

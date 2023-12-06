@@ -22,7 +22,7 @@ Output: "Hello World! This is an email "
 """
 
 import pandas as pd
-import spacy
+# import spacy
 import re
 import urllib3
 import utils
@@ -172,65 +172,65 @@ def lemmatize_text(texts):
     return list_of_lemmatized_texts
 
 
-def lemmatize_text(texts, nlp):
-    list_of_lemmatized_texts = []
-    try:
-        for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser', 'textcat']):
-            lemmatized_texts = []
-            for token in doc:
-                if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
-                    lemmatized_texts.append(token.lemma_)
-            list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
-    except Exception as err:
-        print(f"ERROR: {err}")
+# def lemmatize_text(texts, nlp):
+#     list_of_lemmatized_texts = []
+#     try:
+#         for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser', 'textcat']):
+#             lemmatized_texts = []
+#             for token in doc:
+#                 if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
+#                     lemmatized_texts.append(token.lemma_)
+#             list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
+#     except Exception as err:
+#         print(f"ERROR: {err}")
  
-    return list_of_lemmatized_texts
+#     return list_of_lemmatized_texts
 
 
-def get_entity_label(label):
-    if label in ['GPE', 'LOC', 'FAC']:
-        label = 'LOCATION'
-    elif label in ['DATE', 'TIME']:
-        label = 'DATE_TIME'
-    elif label in ['ORG']:
-        label = 'ORGANIZATION'
-    return label
+# def get_entity_label(label):
+#     if label in ['GPE', 'LOC', 'FAC']:
+#         label = 'LOCATION'
+#     elif label in ['DATE', 'TIME']:
+#         label = 'DATE_TIME'
+#     elif label in ['ORG']:
+#         label = 'ORGANIZATION'
+#     return label
 
 
-def extract_name_entity(texts, nlp, name_entities_df):
-    list_of_non_ner = []
-    try:
-        for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['tagger', 'lemmatizer', 'parser', 'textcat']):
-            # Original text
-            doc_text = doc.text_with_ws
-            # Iterate through list of NERs
-            for ent in doc.ents:
-                entity_text = ent.text
-                label = get_entity_label(ent.label_)
+# def extract_name_entity(texts, nlp, name_entities_df):
+#     list_of_non_ner = []
+#     try:
+#         for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['tagger', 'lemmatizer', 'parser', 'textcat']):
+#             # Original text
+#             doc_text = doc.text_with_ws
+#             # Iterate through list of NERs
+#             for ent in doc.ents:
+#                 entity_text = ent.text
+#                 label = get_entity_label(ent.label_)
 
-                if label not in ['ORDINAL', 'CARDINAL', 'PERCENT', 'QUANTITY', 'NORP', 'MONEY', 'LAW']:
-                    row_index = len(list_of_non_ner)             
-                    # Check if the row index exists 
-                    if row_index in name_entities_df.index:
-                        # Check if the current value is NaN
-                        if isinstance(name_entities_df.loc[row_index, label], float) and pd.isna(name_entities_df.loc[row_index, label]):
-                            # If NaN, replace it with a new list containing the specified value
-                            name_entities_df.at[row_index, label] = [entity_text]
-                        else:
-                            # If not NaN, append the value to the existing list
-                            name_entities_df.loc[row_index, label].append(entity_text)  
-                    else:
-                        # Add a new row with the specified index and value
-                        name_entities_df = name_entities_df.append(pd.Series({label: [entity_text]}, name=row_index))
-                    # Replace the NER with empty string
+#                 if label not in ['ORDINAL', 'CARDINAL', 'PERCENT', 'QUANTITY', 'NORP', 'MONEY', 'LAW']:
+#                     row_index = len(list_of_non_ner)             
+#                     # Check if the row index exists 
+#                     if row_index in name_entities_df.index:
+#                         # Check if the current value is NaN
+#                         if isinstance(name_entities_df.loc[row_index, label], float) and pd.isna(name_entities_df.loc[row_index, label]):
+#                             # If NaN, replace it with a new list containing the specified value
+#                             name_entities_df.at[row_index, label] = [entity_text]
+#                         else:
+#                             # If not NaN, append the value to the existing list
+#                             name_entities_df.loc[row_index, label].append(entity_text)  
+#                     else:
+#                         # Add a new row with the specified index and value
+#                         name_entities_df = name_entities_df.append(pd.Series({label: [entity_text]}, name=row_index))
+#                     # Replace the NER with empty string
 
-                if label not in ['NORP', 'MONEY']:
-                    doc_text = doc_text.replace(entity_text, '')
+#                 if label not in ['NORP', 'MONEY']:
+#                     doc_text = doc_text.replace(entity_text, '')
 
-            # List of text without NER
-            list_of_non_ner.append(doc_text)
+#             # List of text without NER
+#             list_of_non_ner.append(doc_text)
 
-    except Exception as err:
-        print(f"ERROR: {err}")
+#     except Exception as err:
+#         print(f"ERROR: {err}")
 
-    return list_of_non_ner, name_entities_df
+#     return list_of_non_ner, name_entities_df
