@@ -11,6 +11,7 @@ import contractions
 import spacy
 import nltk
 import pickle
+import subprocess
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -30,11 +31,16 @@ class Sentiment(Enum):
 # Language models
 nltk.download('stopwords')
 list_of_stopwords = set(stopwords.words('english'))
-nlp = spacy.load("en_core_web_sm")
+# nlp = spacy.load("en_core_web_sm")
 
 # initializer dictionaries for data preprocessing
 emoji_dict = tp.get_emojis()
 slang_word_dict = tp.get_slang_words(webscraped=False)
+
+
+@st.cache_resource
+def download_en_core_web_sm():
+    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
 
 
 def compare_with_existing_embeddings(all_chunks, input_val, sdate="", edate=""):
@@ -596,4 +602,5 @@ def main():
         
 
 if __name__ == "__main__":
+    download_en_core_web_sm()
     main()
