@@ -27,11 +27,9 @@ class Sentiment(Enum):
     Neutral = "1"
     Positive = "2"
 
-
 # Language models
 nltk.download('stopwords')
 list_of_stopwords = set(stopwords.words('english'))
-# nlp = spacy.load("en_core_web_sm")
 
 # initializer dictionaries for data preprocessing
 emoji_dict = tp.get_emojis()
@@ -170,13 +168,15 @@ def process_movie_review(df, input_movie_text, review_text):
     new_df = pd.DataFrame()
 
     if len(filtered_df) > 1:
+        nlp = spacy.load("en_core_web_sm")
+
         # Create a new DataFrame to store the modified data
         new_df = filtered_df.head(1)
         new_df['Review'] = review_text
 
         # Conduct data preprocessing
         new_df["Cleaned_Review"] = new_df["Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=1))
-        new_df["Cleaned_Review"] = remove_ner(new_df["Cleaned_Review"])
+        new_df["Cleaned_Review"] = remove_ner(new_df["Cleaned_Review"], nlp)
         new_df["Cleaned_Review"] = new_df["Cleaned_Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=2))
         # result_df_2_review["Review"] = tp.lemmatize_text(result_df_2_review["Review"])
         new_df["Cleaned_Review"] = tp.lemmatize_text(new_df["Cleaned_Review"], nlp)
@@ -222,7 +222,7 @@ def conduct_text_preprocessing(text, set_n=1):
     return text
 
 
-def remove_ner(df):
+def remove_ner(df, nlp):
     '''
     This function removes Named Entity Recognition (NER)s
     '''
