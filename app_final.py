@@ -11,7 +11,6 @@ import contractions
 import spacy
 import nltk
 import pickle
-import subprocess
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -31,16 +30,11 @@ class Sentiment(Enum):
 # Language models
 nltk.download('stopwords')
 list_of_stopwords = set(stopwords.words('english'))
-
+nlp = spacy.load("en_core_web_sm")
 
 # initializer dictionaries for data preprocessing
 emoji_dict = tp.get_emojis()
 slang_word_dict = tp.get_slang_words(webscraped=False)
-
-
-@st.cache_resource
-def download_en_core_web_sm():
-    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
 
 
 def compare_with_existing_embeddings(all_chunks, input_val, sdate="", edate=""):
@@ -170,18 +164,16 @@ def process_movie_review(df, input_movie_text, review_text):
     new_df = pd.DataFrame()
 
     if len(filtered_df) > 1:
-        nlp = spacy.load("en_core_web_sm")
-        
         # Create a new DataFrame to store the modified data
         new_df = filtered_df.head(1)
         new_df['Review'] = review_text
 
         # Conduct data preprocessing
         new_df["Cleaned_Review"] = new_df["Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=1))
-        new_df["Cleaned_Review"] = remove_ner(new_df["Cleaned_Review"])
+        # new_df["Cleaned_Review"] = remove_ner(new_df["Cleaned_Review"])
         new_df["Cleaned_Review"] = new_df["Cleaned_Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=2))
         # result_df_2_review["Review"] = tp.lemmatize_text(result_df_2_review["Review"])
-        new_df["Cleaned_Review"] = tp.lemmatize_text(new_df["Cleaned_Review"], nlp)
+        # new_df["Cleaned_Review"] = tp.lemmatize_text(new_df["Cleaned_Review"], nlp)
 
         # Generate review sentiment
         new_df['sentiment'] = generate_sentiment(new_df["Cleaned_Review"])
@@ -224,7 +216,7 @@ def conduct_text_preprocessing(text, set_n=1):
     return text
 
 
-def remove_ner(df, nlp):
+def remove_ner(df):
     '''
     This function removes Named Entity Recognition (NER)s
     '''
@@ -388,7 +380,7 @@ def main():
     if start:
         if st.session_state.start == False:
             # Read the data from the CSV file
-            file_path = './dataset/movie_reviews_merged.csv' # Update with your file path ---> REAL
+            file_path = './dataset/movie_metadata_reviews.csv' # Update with your file path ---> REAL
             # file_path = './dataset/cleaned_data/test.csv' # Update with your file path ---> TEST
             
             # Add a Streamlit progress bar
@@ -521,15 +513,15 @@ def main():
         
         input_review = review_text.strip()
         st.subheader(f"Review: :blue[{review_text}]")
+        st.subheader(f"Movie: {review_movie_text}")
 
         result_df_2_review = process_movie_review(st.session_state.all_chunks, review_movie_text, review_text)
         
         if not result_df_2_review.empty:    
-            sentiment_final = result_df_2_review['sentiment'].str.split(" ")
-            st.write(f"{sentiment_final}")
-            if str(sentiment_final).lower() == "negative":
+            sentiment_final = result_df_2_review['sentiment'].iloc[0]
+            if sentiment_final.lower() == "negative":
                 st.header(f"This review gave a :red[Negative] sentiment.")
-            elif str(sentiment_final).lower() == "positive":
+            elif sentiment_final.lower() == "positive":
                 st.header(f" This review gave a :green[Positive] sentiment. ")
             else:
                 st.header(f"This review gave a :grey[Neutral] sentiment.")
@@ -604,5 +596,4 @@ def main():
         
 
 if __name__ == "__main__":
-    download_en_core_web_sm()
     main()
