@@ -8,9 +8,10 @@ import torch
 import text_preprocessing as tp
 import utils
 import contractions
-# import spacy
+import spacy
 import nltk
 import pickle
+import subprocess
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
