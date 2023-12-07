@@ -172,7 +172,7 @@ def process_movie_review(df, input_movie_text, review_text):
         new_df["Cleaned_Review"] = new_df["Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=1))
         # new_df["Cleaned_Review"] = remove_ner(new_df["Cleaned_Review"])
         new_df["Cleaned_Review"] = new_df["Cleaned_Review"].apply(lambda x : conduct_text_preprocessing(text=x, set_n=2))
-        new_df["Review"] = tp.lemmatize_text(result_df_2_review["Review"])
+        new_df["Review"] = tp.lemmatize_text(new_df["Review"])
         # new_df["Cleaned_Review"] = tp.lemmatize_text(new_df["Cleaned_Review"], nlp)
 
         # Generate review sentiment
