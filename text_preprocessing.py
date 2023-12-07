@@ -172,19 +172,19 @@ def lemmatize_text(texts):
     return list_of_lemmatized_texts
 
 
-def lemmatize_text(texts, nlp):
-    list_of_lemmatized_texts = []
-    try:
-        for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser', 'textcat']):
-            lemmatized_texts = []
-            for token in doc:
-                if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
-                    lemmatized_texts.append(token.lemma_)
-            list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
-    except Exception as err:
-        print(f"ERROR: {err}")
+# def lemmatize_text(texts, nlp):
+#     list_of_lemmatized_texts = []
+#     try:
+#         for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser', 'textcat']):
+#             lemmatized_texts = []
+#             for token in doc:
+#                 if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
+#                     lemmatized_texts.append(token.lemma_)
+#             list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
+#     except Exception as err:
+#         print(f"ERROR: {err}")
  
-    return list_of_lemmatized_texts
+#     return list_of_lemmatized_texts
 
 
 def get_entity_label(label):
