@@ -158,33 +158,33 @@ def remove_stopwords(text, list_of_stopwords):
     return filtered_text
 
 
-def lemmatize_text(texts):
-    lemmatizer = WordNetLemmatizer()
-    list_of_lemmatized_texts = []
-    try:
-        for text in texts:
-            tokens = word_tokenize(text)
-            lemmatized_texts = [lemmatizer.lemmatize(token) for token in tokens if token.isalpha() and lemmatizer.lemmatize(token) not in nltk.corpus.stopwords.words('english')]
-            list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
-    except Exception as err:
-        print(f"ERROR: {err}")
-
-    return list_of_lemmatized_texts
-
-
-# def lemmatize_text(texts, nlp):
+# def lemmatize_text(texts):
+#     lemmatizer = WordNetLemmatizer()
 #     list_of_lemmatized_texts = []
 #     try:
-#         for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser', 'textcat']):
-#             lemmatized_texts = []
-#             for token in doc:
-#                 if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
-#                     lemmatized_texts.append(token.lemma_)
+#         for text in texts:
+#             tokens = word_tokenize(text)
+#             lemmatized_texts = [lemmatizer.lemmatize(token) for token in tokens if token.isalpha() and lemmatizer.lemmatize(token) not in nltk.corpus.stopwords.words('english')]
 #             list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
 #     except Exception as err:
 #         print(f"ERROR: {err}")
- 
+
 #     return list_of_lemmatized_texts
+
+
+def lemmatize_text(texts, nlp):
+    list_of_lemmatized_texts = []
+    try:
+        for doc in nlp.pipe(texts, n_process=2, batch_size=2000, disable=['ner', 'parser', 'textcat']):
+            lemmatized_texts = []
+            for token in doc:
+                if token.lemma_ not in nlp.Defaults.stop_words and token.lemma_.isalpha():
+                    lemmatized_texts.append(token.lemma_)
+            list_of_lemmatized_texts.append(" ".join(lemmatized_texts))
+    except Exception as err:
+        print(f"ERROR: {err}")
+ 
+    return list_of_lemmatized_texts
 
 
 def get_entity_label(label):
